@@ -5,7 +5,6 @@ from members.ivan import ivan_bp
 from members.paul import paul_bp
 from members.theo import theo_bp
 
-
 def create_app() -> Flask:
     app = Flask(__name__)
 

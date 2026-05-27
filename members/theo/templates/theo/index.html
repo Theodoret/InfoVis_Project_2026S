@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>InfoVis VU 2026</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('theo.static', filename='styles/style.css') }}">
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.0/topojson.min.js"></script>
+
+    <script src="{{ url_for('theo.static', filename='js/slider.js') }}"></script>
+    <script src="{{ url_for('theo.static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('theo.static', filename='js/lineplot.js') }}"></script>
+    <script src="{{ url_for('theo.static', filename='js/plot.js') }}"></script>
+</head>
+<body>
+
+<h1>InfoVis VU 2026 - Exercise 2</h1>
+<p>Enter your name and Matrikelnummer</p>
+
+
+<div id="main_container" class="main_container">
+    <div class="container_l">
+        <svg id="svg_map"></svg>
+    </div>
+    <div class="container_r">
+        <p></p>
+        <svg id="svg_plot"></svg>
+    </div>
+</div>
+
+    <div id = "dropdown_div" class="dd_container">
+    <label>Indicator:</label>
+        <select id="indicator_change" class="dropdown"></select></div>
+<div id="year_div" class="dd_container">
+    <label for="yearSlider">Year:</label>
+    <input type="range" id="yearSlider" min="1960" max="2020" step="1" value="2020">
+    <span id="yearLabel">Year: 2020</span>
+</div>
+<div id="svg_line_plot" class="svg_line_plot">
+
+</div>
+
+
+<script>
+    let full_data = {{ full_data | safe }};
+    let pca_data = {{ pca_data | safe }};
+    const data = full_data;
+    initSlider();
+    initMap();
+    initLinePlot();
+    initPlot();
+</script>
+
+</body>
+</html>

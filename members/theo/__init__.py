@@ -10,8 +10,11 @@ theo_bp = Blueprint(
 )
 
 
-@theo_bp.route("/")
-def page():
-    record_page_visit("Theo")
-    visit_count = get_page_visit_count("Theo")
-    return render_template("theo/page.html", member_name="Theo", visit_count=visit_count)
+#@theo_bp.route("/")
+#def page():
+#    record_page_visit("Theo")
+#    visit_count = get_page_visit_count("Theo")
+#    #return render_template("theo/page.html", member_name="Theo", visit_count=visit_count)
+#    return render_template("theo/index.html", member_name="Theo", visit_count=visit_count)
+
+from .app import theo_bp
