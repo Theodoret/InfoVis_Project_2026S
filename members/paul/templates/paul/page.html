@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ member_name }} - InfoVis Project</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+    <main class="container">
+        <h1>{{ member_name }}'s Page</h1>
+        <p>This page is maintained in the <strong>members/paul</strong> folder.</p>
+        <p>Total visits: <strong>{{ visit_count }}</strong></p>
+
+        <a class="button secondary" href="{{ url_for('index') }}">Back to main page</a>
+    </main>
+</body>
+</html>
