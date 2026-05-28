@@ -2,54 +2,99 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>InfoVis VU 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore interactive visualizations analyzing the relationships between national GDP and three core Quality of Life pillars: Culture/Sport, Social Contacts, and Volunteering/Citizenship across European nations.">
+    <title>GDP vs. Quality of Life - InfoVis VU 2026</title>
+    
+    <!-- Premium Styles -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('theo.static', filename='styles/style.css') }}">
 
+    <!-- External D3 & TopoJSON Libraries -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.0/topojson.min.js"></script>
-
     <script src="{{ url_for('theo.static', filename='js/slider.js') }}"></script>
-    <script src="{{ url_for('theo.static', filename='js/map.js') }}"></script>
-    <script src="{{ url_for('theo.static', filename='js/lineplot.js') }}"></script>
     <script src="{{ url_for('theo.static', filename='js/plot.js') }}"></script>
 </head>
 <body>
 
-<h1>InfoVis VU 2026 - Exercise 2</h1>
-<p>Enter your name and Matrikelnummer</p>
+<div class="dashboard-container" id="dashboard_container">
+    
+    <!-- Dashboard Header -->
+    <header id="dashboard_header">
+        <h1 id="main_title">GDP and Quality of Life</h1>
+        <p class="dashboard-desc" id="main_description">
+            Analyzing the impact of national economic strength on social welfare across three core quality-of-life categories. 
+            Select a year to dynamically inspect relations using aligned scatter plots and European choropleth maps.
+        </p>
+    </header>
 
+    <main id="dashboard_main">
+        
+        <!-- Controls Card -->
+        <div class="control-card" id="controls_card">
+            <label for="yearSelect" id="label_year_select">Temporal Filter:</label>
+            <select id="yearSelect" aria-label="Select Year for Visualization"></select>
+        </div>
 
-<div id="main_container" class="main_container">
-    <div class="container_l">
-        <svg id="svg_map"></svg>
-    </div>
-    <div class="container_r">
-        <p></p>
-        <svg id="svg_plot"></svg>
-    </div>
+        <!-- Pillar 1: Culture & Sport -->
+        <section class="qol-section" data-category="culture" id="sec_culture">
+            <h2 id="title_culture">Culture / Sport</h2>
+            <p class="dashboard-desc" style="margin-bottom: 16px;">
+                Shows the percentage of individuals participating in cultural or sporting activities at least once in the past 12 months.
+            </p>
+            <div class="viz-row" id="row_culture">
+                <svg id="svg_culture_map" aria-label="Culture and Sport Participation Map"></svg>
+                <svg id="svg_culture_scatter" aria-label="GDP vs Culture and Sport scatter plot"></svg>
+            </div>
+        </section>
+
+        <!-- Pillar 2: Social Contacts -->
+        <section class="qol-section" data-category="social" id="sec_social">
+            <h2 id="title_social">Social Contacts</h2>
+            <p class="dashboard-desc" style="margin-bottom: 16px;">
+                Shows the percentage of people meeting friends or family at least weekly, illustrating core social health.
+            </p>
+            <div class="viz-row" id="row_social">
+                <svg id="svg_social_map" aria-label="Social Contact Weekly Frequency Map"></svg>
+                <svg id="svg_social_scatter" aria-label="GDP vs Social Contact frequency scatter plot"></svg>
+            </div>
+        </section>
+
+        <!-- Pillar 3: Volunteering & Citizenship -->
+        <section class="qol-section" data-category="volunteer" id="sec_volunteer">
+            <h2 id="title_volunteer">Volunteering / Citizenship</h2>
+            <p class="dashboard-desc" style="margin-bottom: 16px;">
+                Shows the percentage of individuals engaging in voluntary work or active citizenship, indicating community health.
+            </p>
+            <div class="viz-row" id="row_volunteer">
+                <svg id="svg_volunteer_map" aria-label="Voluntary Work and Active Citizenship Map"></svg>
+                <svg id="svg_volunteer_scatter" aria-label="GDP vs Volunteering scatter plot"></svg>
+            </div>
+        </section>
+        
+    </main>
+
+    <!-- Footer Stats -->
+    <footer style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 24px;" id="dashboard_footer">
+        <p style="color: var(--text-muted); font-size: 0.85rem;" id="footer_copyright">
+            InfoVis VU 2026S &bull; Interactive Dashboard
+        </p>
+        {% if visit_count %}
+        <p style="color: var(--hover-color); font-size: 0.9rem; font-weight: 600; margin-top: 4px;" id="visitor_counter">
+            Dashboard Visits: {{ visit_count }}
+        </p>
+        {% endif %}
+    </footer>
+
 </div>
 
-    <div id = "dropdown_div" class="dd_container">
-    <label>Indicator:</label>
-        <select id="indicator_change" class="dropdown"></select></div>
-<div id="year_div" class="dd_container">
-    <label for="yearSlider">Year:</label>
-    <input type="range" id="yearSlider" min="1960" max="2020" step="1" value="2020">
-    <span id="yearLabel">Year: 2020</span>
-</div>
-<div id="svg_line_plot" class="svg_line_plot">
-
-</div>
-
-
+<!-- Data Pass and Initialization -->
 <script>
-    let full_data = {{ full_data | safe }};
-    let pca_data = {{ pca_data | safe }};
-    const data = full_data;
+    window.mergedData = {{ merged_data | safe }};
+    window.availableYears = {{ available_years | safe }};
+    window.worldTopoUrl = "{{ url_for('theo.static', filename='data/world-topo.json') }}";
     initSlider();
-    initMap();
-    initLinePlot();
-    initPlot();
+    initPlots();
 </script>
 
 </body>

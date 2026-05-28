@@ -1,123 +1,305 @@
-:root{
-    --division_width: 400px;
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --bg-color: #070913;
+    --app-bg-gradient: radial-gradient(circle at 50% 0%, #161834 0%, #070913 70%);
+    --card-bg: rgba(16, 20, 42, 0.55);
+    --card-border: rgba(255, 255, 255, 0.06);
+    --card-border-hover: rgba(255, 255, 255, 0.12);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --hover-color: #ff9f43;
+    --map-empty-fill: #111322;
+    --map-stroke: #25283f;
+    --legend-stroke: #334155;
+    --grid-color: rgba(255, 255, 255, 0.05);
+    --axis-line-color: rgba(255, 255, 255, 0.15);
+    
+    /* Metrics accent colors */
+    --color-culture: #3b82f6;
+    --color-social: #10b981;
+    --color-volunteer: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
 
 body {
-    padding-left: 3em;
-    font-family: Calibri, Arial, Helvetica, sans-serif;
-    color: #222222;
-    background-color: #fff;
+    background-color: var(--bg-color);
+    background-image: var(--app-bg-gradient);
+    min-height: 100vh;
+    padding: 40px 24px;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-primary);
+    line-height: 1.6;
 }
 
-
-
-.label{
-    font-size: small;
+.dashboard-container {
+    max-width: 1280px;
+    margin: 0 auto;
 }
 
-div.tooltip {
-    float: left; position: absolute; text-align: left;
-    width: var(--division_width); height: 100px; padding: 10px;
-    font-size: 16px;
-    background: floralwhite;
-    border: 0; border-radius: 8px;
-    pointer-events: none;
+/* Header Section */
+header {
+    margin-bottom: 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 24px;
 }
 
-
-.subtitle text {
-  font-size: 10px;
-  text-decoration: underline;
-  fill: gray;
+h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
 }
 
-path.line {
-  fill: none;
-  stroke: midnightblue;
-  stroke-width: 3px;
+.dashboard-desc {
+    color: var(--text-secondary);
+    font-size: 1.05rem;
+    font-weight: 400;
+    max-width: 800px;
 }
 
-.axis path, .axis line {
-  fill: none;
-  stroke: #595065;
-  shape-rendering: geometricPrecision;
+/* Year Selector Card */
+.control-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 16px;
+    padding: 16px 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
-text.title {
-  font-size: 10px;
-  fill: Black;
-}
-.main_container {
-    float: left; align-content: center;
-    height: auto; width: auto;
-    margin-top:5px; margin-bottom: 10px; margin-left:5px; padding-top: 5px; padding-bottom: 10px; padding-left:5px;
-    box-shadow: rgba(0, 0, 0, 0.05) 0 0 0 1px, rgb(209, 213, 219) 0 0 0 1px inset;
+.control-card label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
-.container_l {
-    float: left; display: table-cell; vertical-align:top;
-    height: auto; padding: 10px; width: 800px;
-    border: 0 solid black;
-    font-size: large;
-}
-.container_r {
-    float: left; display: table-cell; vertical-align:top;
-    height: 10%; padding: 10px; width: 10%;
-    border: 0 solid black;
-    font-size: large;
-}
-
-.container_tool {
-    float: left; display: table-cell; vertical-align:top;
-    height: auto; padding: 10px; width: auto; margin-left: 0px; margin-top: -100px;
-    border: 0 solid black;
-    font-size: large;
+#yearSelect {
+    background: rgba(30, 41, 59, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    padding: 8px 36px 8px 16px;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
 }
 
-.title_div {
-    margin-left:5px;
+#yearSelect:hover, #yearSelect:focus {
+    border-color: var(--hover-color);
+    box-shadow: 0 0 12px rgba(255, 159, 67, 0.25);
+    background-color: rgba(30, 41, 59, 0.9);
 }
 
-
-.dd_container {
-    float: left; align-content: center;
-    height: auto; width: auto;
-    margin-top:5px; margin-bottom: 10px; margin-left:5px; padding: 5px;
-    box-shadow: rgba(0, 0, 0, 0.05) 0 0 0 1px, rgb(209, 213, 219) 0 0 0 1px inset;
-    opacity: 100.0;
+/* Quality of Life Category Sections */
+.qol-section {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.25);
+    transition: transform 0.3s ease, border-color 0.3s ease;
 }
 
-#year_div {
+.qol-section:hover {
+    border-color: var(--card-border-hover);
+    transform: translateY(-2px);
+}
+
+.qol-section h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-#yearSlider {
-    width: 260px;
+.qol-section[data-category="culture"] h2 {
+    color: var(--color-culture);
 }
 
-.svg_line_plot {
-    float:left; align-content: center;
-    height: 500px; width: 71.2%;
-    margin-top:0px; margin-bottom: 10px; margin-left:0px; padding-top: 0; padding-bottom: 0; padding-left:3%;
-    box-shadow: rgba(0, 0, 0, 0.05) 0 0 0 1px, rgb(209, 213, 219) 0 0 0 1px inset;
-    opacity: 1.0; font-size: large;
+.qol-section[data-category="social"] h2 {
+    color: var(--color-social);
 }
 
-/* Highlight style (Task 5) */
-.highlighted {
-    fill: orange !important;
-    stroke: #333;
-    stroke-width: 2px;
+.qol-section[data-category="volunteer"] h2 {
+    color: var(--color-volunteer);
 }
 
-.brush .selection {
-    fill: rgba(242, 142, 43, 0.2);
-    stroke: #f28e2b;
+/* Visualizations Row */
+.viz-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+}
+
+.viz-row svg {
+    flex: 1 1 500px;
+    border-radius: 12px;
+    background: rgba(10, 11, 24, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.viz-row svg:hover {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* SVG Chart Elements Styling */
+.chart-title {
+    fill: var(--text-primary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.axis-label {
+    fill: var(--text-secondary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+.error-text {
+    fill: var(--text-muted);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Grid & Axes */
+.grid line {
+    stroke: var(--grid-color);
+}
+
+.axis path, .axis line {
+    stroke: var(--axis-line-color);
+    stroke-width: 1px;
+}
+
+.axis text {
+    fill: var(--text-secondary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.legend-text {
+    fill: var(--text-secondary);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Active Hover Transitions */
+.country-shape {
+    cursor: pointer;
+    transition: fill 0.25s ease, opacity 0.25s ease, stroke-width 0.25s ease;
+}
+
+.country-dot {
+    cursor: pointer;
+    transition: fill 0.25s ease, r 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.25s ease;
+    stroke: rgba(0, 0, 0, 0.3);
+    stroke-width: 1px;
+}
+
+/* Beautiful Glassmorphic Tooltip */
+div.tooltip {
+    position: absolute;
+    text-align: left;
+    min-width: 200px;
+    padding: 12px 16px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13px;
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    color: var(--text-primary);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     pointer-events: none;
+    z-index: 1000;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
-.dot {
-    cursor: crosshair;
+.tooltip-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.tooltip-row:last-child {
+    margin-bottom: 0;
+}
+
+.tooltip-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.tooltip-value {
+    font-weight: 700;
+    color: #ffffff;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
 }

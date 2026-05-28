@@ -2,8 +2,6 @@ import os
 import json
 import pandas as pd
 from flask import Blueprint, render_template
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
 
 # Import your database utilities from the root common folder
 from common.database import get_page_visit_count, record_page_visit
@@ -16,12 +14,13 @@ theo_bp = Blueprint(
     static_folder="static",
 )
 
-COUNTRIES = ['Afghanistan', 'Albania', 'Algeria', 'Angola', 'Argentina', 'Armenia', 'Australia', 'Austria',
-             'Azerbaijan', 'Brazil', 'Bulgaria', 'Cameroon', 'Chile', 'China', 'Colombia', 'Croatia', 'Cuba',
-             'Cyprus', 'Czech Republic', 'Ecuador', 'Egypt, Arab Rep.', 'Eritrea', 'Ethiopia', 'France', 'Germany',
-             'Ghana', 'Greece', 'India', 'Indonesia', 'Iran, Islamic Rep.', 'Iraq', 'Ireland', 'Italy', 'Japan',
-             'Jordan', 'Kazakhstan', 'Kenya', 'Lebanon', 'Malta', 'Mexico', 'Morocco', 'Pakistan', 'Peru',
-             'Philippines', 'Russian Federation', 'Syrian Arab Republic', 'Tunisia', 'Turkey', 'Ukraine']
+ISO2_TO_ISO3 = {
+    "AL": "ALB", "AT": "AUT", "BE": "BEL", "BG": "BGR", "CH": "CHE", "CY": "CYP", "CZ": "CZE",
+    "DE": "DEU", "DK": "DNK", "EE": "EST", "EL": "GRC", "ES": "ESP", "FI": "FIN", "FR": "FRA",
+    "HR": "HRV", "HU": "HUN", "IE": "IRL", "IS": "ISL", "IT": "ITA", "LT": "LTU", "LU": "LUX",
+    "LV": "LVA", "MT": "MLT", "NL": "NLD", "NO": "NOR", "PL": "POL", "PT": "PRT", "RO": "ROU",
+    "RS": "SRB", "SE": "SWE", "SI": "SVN", "SK": "SVK", "UK": "GBR",
+}
 
 
 @theo_bp.route('/')
@@ -36,55 +35,78 @@ def page():
 
 # Update your data function signature to accept visit_count
 def data(visit_count):
-    # Get the directory where THIS app.py lives (members/theo/)
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    DATA_PATH = os.path.join(BASE_DIR, "static", "data", "cleaned_data.csv")
+    ROOT_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
+    STATIC_DATA_DIR = os.path.join(BASE_DIR, "static", "data")
 
-    # Task 1: load and filter
-    df = pd.read_csv(DATA_PATH)
-    filtered_df = df[df['Country Name'].isin(COUNTRIES)].copy()
+    gdp_path = os.path.join(ROOT_DIR, "data", "API_NY.GDP.MKTP.CD_DS2_en_csv_v2_252769.csv")
+    culture_path = os.path.join(STATIC_DATA_DIR, "ilc_scp04.csv")
+    social_path = os.path.join(STATIC_DATA_DIR, "ilc_scp12.csv")
+    volunteering_path = os.path.join(STATIC_DATA_DIR, "ilc_scp20.csv")
 
-    # Task 2: compute a PCA based on the data of the most recent year
-    recent_year = filtered_df['year'].max()
-    filtered_df = filtered_df.fillna(filtered_df.groupby('Country Name').bfill().ffill())
-    df_recent = filtered_df[filtered_df['year'] == recent_year].copy()
+    gdp_df = pd.read_csv(gdp_path, skiprows=4)
+    gdp_df = gdp_df[["Country Name", "Country Code"] + [str(y) for y in range(2015, 2026)]]
+    gdp_df = gdp_df.melt(
+        id_vars=["Country Name", "Country Code"],
+        var_name="year",
+        value_name="gdp_usd"
+    )
+    gdp_df["year"] = pd.to_numeric(gdp_df["year"], errors="coerce")
+    gdp_df["gdp_usd"] = pd.to_numeric(gdp_df["gdp_usd"], errors="coerce")
+    gdp_df = gdp_df.dropna(subset=["year", "gdp_usd"])
 
-    # Task 2: Select numeric columns, excluding ID columns
-    features = df_recent.select_dtypes(include=['float64', 'int64']).drop(columns=['year'], errors='ignore')
+    culture_df = pd.read_csv(culture_path)
+    culture_df = culture_df[
+        (culture_df["acl00"] == "AC52A")
+        & (culture_df["frequenc"] == "GE1")
+        & (culture_df["geo"].str.len() == 2)
+    ][["geo", "TIME_PERIOD", "OBS_VALUE"]].copy()
+    culture_df["Country Code"] = culture_df["geo"].map(ISO2_TO_ISO3)
+    culture_df["year"] = pd.to_numeric(culture_df["TIME_PERIOD"], errors="coerce")
+    culture_df["culture_sport_pct"] = pd.to_numeric(culture_df["OBS_VALUE"], errors="coerce")
+    culture_df = culture_df.dropna(subset=["Country Code", "year", "culture_sport_pct"])
+    culture_df = culture_df[["Country Code", "year", "culture_sport_pct"]]
 
-    # Task 2: PCA requires no NaNs. We fill with column means.
-    features_filled = features.fillna(features.mean())
+    social_df = pd.read_csv(social_path)
+    social_df = social_df[
+        (social_df["pers_cat"] == "FRD")
+        & (social_df["frequenc"] == "WEEK")
+        & (social_df["geo"].str.len() == 2)
+    ][["geo", "TIME_PERIOD", "OBS_VALUE"]].copy()
+    social_df["Country Code"] = social_df["geo"].map(ISO2_TO_ISO3)
+    social_df["year"] = pd.to_numeric(social_df["TIME_PERIOD"], errors="coerce")
+    social_df["social_contacts_pct"] = pd.to_numeric(social_df["OBS_VALUE"], errors="coerce")
+    social_df = social_df.dropna(subset=["Country Code", "year", "social_contacts_pct"])
+    social_df = social_df[["Country Code", "year", "social_contacts_pct"]]
 
-    # Task 2: Scaling
-    scaled_data = StandardScaler().fit_transform(features_filled)
+    volunteering_df = pd.read_csv(volunteering_path)
+    volunteering_df = volunteering_df[
+        (volunteering_df["acl00"] == "AC43A")
+        & (volunteering_df["geo"].str.len() == 2)
+    ][["geo", "TIME_PERIOD", "OBS_VALUE"]].copy()
+    volunteering_df["Country Code"] = volunteering_df["geo"].map(ISO2_TO_ISO3)
+    volunteering_df["year"] = pd.to_numeric(volunteering_df["TIME_PERIOD"], errors="coerce")
+    volunteering_df["volunteering_citizenship_pct"] = pd.to_numeric(volunteering_df["OBS_VALUE"], errors="coerce")
+    volunteering_df = volunteering_df.dropna(subset=["Country Code", "year", "volunteering_citizenship_pct"])
+    volunteering_df = volunteering_df[["Country Code", "year", "volunteering_citizenship_pct"]]
 
-    # Task 2: PCA to 2D
-    pca = PCA(n_components=2)
-    pca_results = pca.fit_transform(scaled_data)
+    merged_df = gdp_df.merge(culture_df, on=["Country Code", "year"], how="inner")
+    merged_df = merged_df.merge(social_df, on=["Country Code", "year"], how="inner")
+    merged_df = merged_df.merge(volunteering_df, on=["Country Code", "year"], how="inner")
+    merged_df = merged_df.dropna(
+        subset=["gdp_usd", "culture_sport_pct", "social_contacts_pct", "volunteering_citizenship_pct"]
+    )
 
-    # Task 2: Map PCA results back to country names
-    pca_list = []
-    columns_to_extract = [
-        'Country Name', 'Country Code', 'Access to electricity (% of population)',
-        'Agricultural irrigated land (% of total agricultural land)',
-        'Average precipitation in depth (mm per year)',
-        'Employment in agriculture (% of total employment) (modeled ILO estimate)',
-        'GDP per capita (current US$)', 'Land area (sq. km)', 'Population, total'
-    ]
+    merged_df = merged_df.sort_values(["year", "Country Name"])
+    culture_years = set(culture_df["year"].dropna().astype(int).unique().tolist())
+    social_years = set(social_df["year"].dropna().astype(int).unique().tolist())
+    volunteering_years = set(volunteering_df["year"].dropna().astype(int).unique().tolist())
+    years = sorted(culture_years.intersection(social_years).intersection(volunteering_years))
 
-    for i, row in enumerate(df_recent[columns_to_extract].itertuples(index=False, name=None)):
-        country, code, access, agricultural, precipitation, employment, gdp, area, population = row
-        pca_list.append({
-            "country": country, "code": code, "x": pca_results[i, 0], "y": pca_results[i, 1],
-            "access": access, "agricultural": agricultural, "precipitation": precipitation,
-            "employment": employment, "gdp": gdp, "area": area, "population": population
-        })
-
-    # 3. Send EVERYTHING (visit stats + PCA data) to your HTML file
     return render_template(
         "theo/index.html",
         member_name="Theo",
         visit_count=visit_count,
-        full_data=filtered_df.to_json(orient='records'),
-        pca_data=json.dumps(pca_list)
+        merged_data=merged_df.to_json(orient="records"),
+        available_years=json.dumps(years)
     )

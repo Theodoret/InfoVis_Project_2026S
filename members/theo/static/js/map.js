@@ -17,7 +17,7 @@ const COUNTRIES = ['Afghanistan', 'Albania', 'Algeria', 'Angola', 'Argentina', '
 function initMap() {
 
     // Task 4: loads the world map as topojson
-    d3.json("../static/data/world-topo.json").then(function (countries) {
+    d3.json("../data/world-topo.json").then(function (countries) {
 
         // Task 4: defines the map projection method and scales the map within the SVG
         let projection = d3.geoEqualEarth()

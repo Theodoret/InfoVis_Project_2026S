@@ -1,42 +1,28 @@
-// 6.2: Global year state for temporal interaction
-let currentYear = 2020;
+let currentYear = null;
 
-// 6.2: Initialize year slider control
 function initSlider() {
-    const slider = d3.select("#yearSlider");
-    const label = d3.select("#yearLabel");
+    const years = (window.availableYears || []).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+    const select = d3.select("#yearSelect");
 
-    const years = data.map(d => +d.year).filter(Number.isFinite);
-    const minYear = d3.min(years) ?? 1960;
-    const maxYear = d3.max(years) ?? 2020;
+    if (years.length === 0) {
+        select.append("option").attr("value", "").text("No years available");
+        return;
+    }
 
-    currentYear = maxYear;
+    currentYear = years[years.length - 1];
+    select.selectAll("option")
+        .data(years)
+        .join("option")
+        .attr("value", d => d)
+        .text(d => d);
+    select.property("value", String(currentYear));
 
-    slider
-        .attr("min", minYear)
-        .attr("max", maxYear)
-        .attr("step", 1)
-        .property("value", currentYear);
-
-    label.text(`Year: ${currentYear}`);
-
-    // 6.2: Update all views when year changes
-    slider.on("input", function() {
-        currentYear = +this.value;
-        label.text(`Year: ${currentYear}`);
-
-        if (window.updateMap) {
-            window.updateMap();
-        }
-
-        if (window.updateLinePlot) {
-            window.updateLinePlot(window.selectedLineCountryCodes || []);
+    select.on("change", function () {
+        currentYear = Number(this.value);
+        if (window.updatePlots) {
+            window.updatePlots();
         }
     });
-
-    if (window.updateMap) {
-        window.updateMap();
-    }
 }
 
 window.initSlider = initSlider;
