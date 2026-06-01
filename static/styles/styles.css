@@ -1,0 +1,131 @@
+h1 {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 2.5rem;
+    text-align: center;
+}
+.student_info {
+    font-family: "Arial", Times, serif;
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+st {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+p {
+    text-align: center;
+    font:size: 2rem;
+    font-weight: bold
+}
+
+.bg {
+    background-color: #DDFFD6;
+    width: 95%;
+    height: 100%;
+    float: left;
+    border: 1px solid black;
+    padding: 10px;
+    border-radius: 25px;
+}
+
+
+.header_container {
+    border: 1px solid black;
+    border-radius: 25px;
+}
+
+.lineplot_box {
+    width: 50%;
+    height: 500px;
+    border: 1px solid black;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 25px;
+    overflow: hidden;
+    position: relative;
+}
+
+.choose_box {
+    width: 20%;
+    height: 500px;
+    padding: 10px;
+    border: 1px solid black;
+    box-sizing: border-box;
+    border-radius: 25px;
+}
+
+.top3_box {
+    width: 20%;
+    height: 500px;
+    padding: 10px;
+    border: 1px solid black;
+    box-sizing: border-box;
+    border-radius: 25px;
+}
+
+.top_content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 15px;
+    border: 1px solid black;
+    border-radius: 25px;
+}
+
+.main_content {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 20px;
+    margin-top: 15px;
+    border: 1px solid black;
+    border-radius: 25px;
+}
+
+.bottom_content {
+    width: 100%;
+    height: 400px;
+    gap: 20px;
+    margin-top: 15px;
+    border: 1px solid black;
+    border-radius: 25px;
+}
+.layer_button {
+    width: 30%;
+    height: 100px;
+    padding: 10px;
+    border: 1px solid black;
+    box-sizing: border-box;
+    border-radius: 25px;
+    background-color: #F2F2F2;
+    color: black;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+.choose_dataset_block{
+    display:block;
+}
+
+#scatterplot{
+    width: 50%;
+    height: 300px;
+    background: white;
+}
+
+#tooltip {
+    float: left; position: absolute; text-align: left;
+    width: 200px; height: 100px; padding: 10px;
+    font-size: 16px;
+    background: floralwhite;
+    border: 0; border-radius: 8px;
+    pointer-events: none;
+    opacity: 0%;
+}
