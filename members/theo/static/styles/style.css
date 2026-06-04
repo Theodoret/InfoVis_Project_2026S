@@ -17,9 +17,10 @@
     --axis-line-color: rgba(255, 255, 255, 0.15);
     
     /* Metrics accent colors */
-    --color-culture: #3b82f6;
+    --color-pca: #a78bfa;
+    --color-work: #3b82f6;
+    --color-tv: #ef4444;
     --color-social: #10b981;
-    --color-volunteer: #ef4444;
 }
 
 * {
@@ -67,7 +68,99 @@ h1 {
     max-width: 800px;
 }
 
-/* Year Selector Card */
+/* Site navigation */
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+}
+
+.site-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background: rgba(30, 41, 59, 0.45);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.site-nav-btn:hover {
+    border-color: var(--card-border-hover);
+    color: var(--text-primary);
+}
+
+.site-nav-btn.active {
+    border-color: var(--hover-color);
+    background: rgba(255, 159, 67, 0.12);
+    color: var(--hover-color);
+    box-shadow: 0 0 16px rgba(255, 159, 67, 0.15);
+}
+
+/* Stacked metric container */
+.stack-heads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.stack-head {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    background: rgba(30, 41, 59, 0.45);
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.stack-head:hover {
+    border-color: var(--card-border-hover);
+    color: var(--text-primary);
+}
+
+.stack-head.active {
+    border-color: var(--hover-color);
+    background: rgba(255, 159, 67, 0.12);
+    color: var(--hover-color);
+}
+
+.stack-stage {
+    position: relative;
+    min-height: 420px;
+    margin-bottom: 28px;
+}
+
+.stack-panel {
+    display: none;
+}
+
+.stack-panel.active {
+    display: block;
+}
+
+.stack-panel.qol-section {
+    margin-bottom: 0;
+}
+
+/* Year slider below stack, centered */
+.year-slider-wrap {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
 .control-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
@@ -75,11 +168,12 @@ h1 {
     -webkit-backdrop-filter: blur(16px);
     border-radius: 16px;
     padding: 16px 24px;
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 16px;
-    margin-bottom: 32px;
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 520px;
 }
 
 .control-card label {
@@ -88,30 +182,39 @@ h1 {
     color: var(--text-primary);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    flex-shrink: 0;
 }
 
-#yearSelect {
-    background: rgba(30, 41, 59, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-primary);
-    padding: 8px 36px 8px 16px;
-    border-radius: 8px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    outline: none;
+#yearSlider {
+    flex: 1;
+    min-width: 160px;
+    height: 6px;
+    accent-color: var(--hover-color);
     cursor: pointer;
-    transition: all 0.25s ease;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f8fafc'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 16px;
 }
 
-#yearSelect:hover, #yearSelect:focus {
-    border-color: var(--hover-color);
-    box-shadow: 0 0 12px rgba(255, 159, 67, 0.25);
-    background-color: rgba(30, 41, 59, 0.9);
+#yearSliderValue {
+    min-width: 3.5rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--hover-color);
+    text-align: right;
+}
+
+.section-desc {
+    margin-bottom: 16px;
+}
+
+.dashboard-footer {
+    margin-top: 40px;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 24px;
+}
+
+.dashboard-footer p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
 }
 
 /* Quality of Life Category Sections */
@@ -142,16 +245,16 @@ h1 {
     gap: 10px;
 }
 
-.qol-section[data-category="culture"] h2 {
-    color: var(--color-culture);
+.qol-section[data-category="work"] h2 {
+    color: var(--color-work);
+}
+
+.qol-section[data-category="tv"] h2 {
+    color: var(--color-tv);
 }
 
 .qol-section[data-category="social"] h2 {
     color: var(--color-social);
-}
-
-.qol-section[data-category="volunteer"] h2 {
-    color: var(--color-volunteer);
 }
 
 /* Visualizations Row */
@@ -159,6 +262,15 @@ h1 {
     display: flex;
     flex-wrap: wrap;
     gap: 24px;
+}
+
+.viz-row-pca {
+    justify-content: center;
+}
+
+.viz-row-pca svg {
+    flex: 1 1 100%;
+    max-width: 1160px;
 }
 
 .viz-row svg {

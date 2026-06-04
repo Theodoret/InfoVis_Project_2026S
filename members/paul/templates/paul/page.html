@@ -7,8 +7,13 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
+    <nav class="site-nav" style="display:flex;gap:10px;padding:16px 24px;" aria-label="Dashboard sections">
+        <a href="{{ url_for('theo.page') }}" style="padding:8px 16px;border-radius:8px;text-decoration:none;color:#475569;">Activities</a>
+        <a href="{{ url_for('paul.page') }}" style="padding:8px 16px;border-radius:8px;text-decoration:none;color:#ff9f43;font-weight:600;border:1px solid #ff9f43;">Education</a>
+        <a href="{{ url_for('ivan.page') }}" style="padding:8px 16px;border-radius:8px;text-decoration:none;color:#475569;">Health</a>
+    </nav>
     <main class="container">
-        <h1>{{ member_name }}'s Page</h1>
+        <h1>Education</h1>
         <p>This page is maintained in the <strong>members/paul</strong> folder.</p>
         <p>Total visits: <strong>{{ visit_count }}</strong></p>
 

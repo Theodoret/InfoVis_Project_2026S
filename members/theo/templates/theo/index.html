@@ -3,13 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Explore interactive visualizations analyzing the relationships between national GDP and three core Quality of Life pillars: Culture/Sport, Social Contacts, and Volunteering/Citizenship across European nations.">
-    <title>GDP vs. Quality of Life - InfoVis VU 2026</title>
-    
-    <!-- Premium Styles -->
+    <meta name="description" content="Explore how GDP relates to working hours, TV time, and social meeting frequency across European countries (ESS survey data).">
+    <title>GDP vs. Activities - InfoVis VU 2026</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('theo.static', filename='styles/style.css') }}">
-
-    <!-- External D3 & TopoJSON Libraries -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.0/topojson.min.js"></script>
     <script src="{{ url_for('theo.static', filename='js/slider.js') }}"></script>
@@ -18,81 +14,97 @@
 <body>
 
 <div class="dashboard-container" id="dashboard_container">
-    
-    <!-- Dashboard Header -->
+
+    <nav class="site-nav" id="site_nav" aria-label="Dashboard sections">
+        <a href="{{ url_for('theo.page') }}" class="site-nav-btn active" id="nav_activities">Activities</a>
+        <a href="{{ url_for('paul.page') }}" class="site-nav-btn" id="nav_education">Education</a>
+        <a href="{{ url_for('ivan.page') }}" class="site-nav-btn" id="nav_health">Health</a>
+    </nav>
+
     <header id="dashboard_header">
-        <h1 id="main_title">GDP and Quality of Life</h1>
+        <h1 id="main_title">GDP and Everyday Activities</h1>
         <p class="dashboard-desc" id="main_description">
-            Analyzing the impact of national economic strength on social welfare across three core quality-of-life categories. 
-            Select a year to dynamically inspect relations using aligned scatter plots and European choropleth maps.
+            European Social Survey indicators merged with national GDP: weekly working hours,
+            weekday TV time, and how often people meet socially. Select a category, then use the year slider.
         </p>
     </header>
 
     <main id="dashboard_main">
-        
-        <!-- Controls Card -->
-        <div class="control-card" id="controls_card">
-            <label for="yearSelect" id="label_year_select">Temporal Filter:</label>
-            <select id="yearSelect" aria-label="Select Year for Visualization"></select>
+
+        <div class="stack-heads" id="stack_heads">
+            <button type="button" class="stack-head active" data-target="sec_pca" id="head_pca">PCA Overview</button>
+            <button type="button" class="stack-head" data-target="sec_work" id="head_work">Working Hours</button>
+            <button type="button" class="stack-head" data-target="sec_tv" id="head_tv">TV Time</button>
+            <button type="button" class="stack-head" data-target="sec_social" id="head_social">Social Meetings</button>
         </div>
 
-        <!-- Pillar 1: Culture & Sport -->
-        <section class="qol-section" data-category="culture" id="sec_culture">
-            <h2 id="title_culture">Culture / Sport</h2>
-            <p class="dashboard-desc" style="margin-bottom: 16px;">
-                Shows the percentage of individuals participating in cultural or sporting activities at least once in the past 12 months.
-            </p>
-            <div class="viz-row" id="row_culture">
-                <svg id="svg_culture_map" aria-label="Culture and Sport Participation Map"></svg>
-                <svg id="svg_culture_scatter" aria-label="GDP vs Culture and Sport scatter plot"></svg>
-            </div>
-        </section>
+        <div class="stack-stage" id="stack_stage">
+            <section class="qol-section stack-panel active" data-category="pca" id="sec_pca">
+                <h2 id="title_pca">PCA Overview</h2>
+                <p class="dashboard-desc section-desc">
+                    Principal Component Analysis of log GDP and all three activity indicators for the selected year.
+                    Countries closer together have a similar economic and lifestyle profile.
+                </p>
+                <div class="viz-row viz-row-pca" id="row_pca">
+                    <svg id="svg_pca_scatter" aria-label="PCA scatter plot"></svg>
+                </div>
+            </section>
 
-        <!-- Pillar 2: Social Contacts -->
-        <section class="qol-section" data-category="social" id="sec_social">
-            <h2 id="title_social">Social Contacts</h2>
-            <p class="dashboard-desc" style="margin-bottom: 16px;">
-                Shows the percentage of people meeting friends or family at least weekly, illustrating core social health.
-            </p>
-            <div class="viz-row" id="row_social">
-                <svg id="svg_social_map" aria-label="Social Contact Weekly Frequency Map"></svg>
-                <svg id="svg_social_scatter" aria-label="GDP vs Social Contact frequency scatter plot"></svg>
-            </div>
-        </section>
+            <section class="qol-section stack-panel" data-category="work" id="sec_work">
+                <h2 id="title_work">Working Hours</h2>
+                <p class="dashboard-desc section-desc">
+                    Total hours normally worked per week in the main job (overtime included), country average.
+                </p>
+                <div class="viz-row" id="row_work">
+                    <svg id="svg_work_map" aria-label="Working hours choropleth map"></svg>
+                    <svg id="svg_work_scatter" aria-label="GDP vs working hours scatter plot"></svg>
+                </div>
+            </section>
 
-        <!-- Pillar 3: Volunteering & Citizenship -->
-        <section class="qol-section" data-category="volunteer" id="sec_volunteer">
-            <h2 id="title_volunteer">Volunteering / Citizenship</h2>
-            <p class="dashboard-desc" style="margin-bottom: 16px;">
-                Shows the percentage of individuals engaging in voluntary work or active citizenship, indicating community health.
-            </p>
-            <div class="viz-row" id="row_volunteer">
-                <svg id="svg_volunteer_map" aria-label="Voluntary Work and Active Citizenship Map"></svg>
-                <svg id="svg_volunteer_scatter" aria-label="GDP vs Volunteering scatter plot"></svg>
+            <section class="qol-section stack-panel" data-category="tv" id="sec_tv">
+                <h2 id="title_tv">TV Time</h2>
+                <p class="dashboard-desc section-desc">
+                    Average weekday TV watching time (hours), derived from ESS category midpoints.
+                </p>
+                <div class="viz-row" id="row_tv">
+                    <svg id="svg_tv_map" aria-label="TV time choropleth map"></svg>
+                    <svg id="svg_tv_scatter" aria-label="GDP vs TV time scatter plot"></svg>
+                </div>
+            </section>
+
+            <section class="qol-section stack-panel" data-category="social" id="sec_social">
+                <h2 id="title_social">Social Meetings</h2>
+                <p class="dashboard-desc section-desc">
+                    How often people meet friends, relatives, or colleagues (1 = never … 7 = every day).
+                </p>
+                <div class="viz-row" id="row_social">
+                    <svg id="svg_social_map" aria-label="Social meeting frequency map"></svg>
+                    <svg id="svg_social_scatter" aria-label="GDP vs social meeting frequency scatter plot"></svg>
+                </div>
+            </section>
+        </div>
+
+        <div class="year-slider-wrap" id="year_slider_wrap">
+            <div class="control-card" id="controls_card">
+                <label for="yearSlider" id="label_year_slider">Year:</label>
+                <input type="range" id="yearSlider" aria-label="Select year for visualization" min="2002" max="2022" step="1" value="2020">
+                <output id="yearSliderValue" for="yearSlider">2020</output>
             </div>
-        </section>
-        
+        </div>
+
     </main>
 
-    <!-- Footer Stats -->
-    <footer style="margin-top: 40px; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 24px;" id="dashboard_footer">
-        <p style="color: var(--text-muted); font-size: 0.85rem;" id="footer_copyright">
-            InfoVis VU 2026S &bull; Interactive Dashboard
-        </p>
-        {% if visit_count %}
-        <p style="color: var(--hover-color); font-size: 0.9rem; font-weight: 600; margin-top: 4px;" id="visitor_counter">
-            Dashboard Visits: {{ visit_count }}
-        </p>
-        {% endif %}
+    <footer class="dashboard-footer" id="dashboard_footer">
+        <p id="footer_copyright">InfoVis VU 2026S &bull; Interactive Dashboard</p>
     </footer>
 
 </div>
 
-<!-- Data Pass and Initialization -->
 <script>
     window.mergedData = {{ merged_data | safe }};
     window.availableYears = {{ available_years | safe }};
-    window.worldTopoUrl = "{{ url_for('theo.static', filename='data/world-topo.json') }}";
+    window.pcaData = {{ pca_data | safe }};
+    window.worldTopoUrl = "{{ url_for('theo.data_file', filename='world-topo.json') }}";
     initSlider();
     initPlots();
 </script>

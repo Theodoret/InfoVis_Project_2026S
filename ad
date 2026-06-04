@@ -1,0 +1,84 @@
+[33mcommit 9de8a1e608ad4250ee3a3d96eb0e3d96347dba20[m[33m ([m[1;36mHEAD -> [m[1;32mtheo[m[33m)[m
+Author: theodoret <agathotheodoret14@gmail.com>
+Date:   Thu Jun 4 18:34:45 2026 +0200
+
+    remove huge raw datasets
+
+ .../data/ESS10MD_e01/ESS10MD_e01 codebook.html     | 310664 [31m----------------[m
+ members/theo/data/ESS10MD_e01/ESS10MD_e01.csv      |    Bin [31m1372614810[m -> [32m0[m bytes
+ .../data/ESS10SCe03_2/ESS10SCe03_2 codebook.html   | 104590 [31m------[m
+ members/theo/data/ESS10SCe03_2/ESS10SCe03_2.csv    |  22075 [31m--[m
+ .../theo/data/ESS10e03_3/ESS10e03_3 codebook.html  | 132857 [31m-------[m
+ members/theo/data/ESS10e03_3/ESS10e03_3.csv        |  37612 [31m--[m
+ .../data/ESS11MD_e01_2/ESS11MD_e01_2 codebook.html | 347129 [31m------------------[m
+ members/theo/data/ESS11MD_e01_2/ESS11MD_e01_2.csv  |    Bin [31m1700228185[m -> [32m0[m bytes
+ .../theo/data/ESS11e04_1/ESS11e04_1 codebook.html  | 134365 [31m-------[m
+ members/theo/data/ESS11e04_1/ESS11e04_1.csv        |  50117 [31m---[m
+ .../theo/data/ESS1e06_7/ESS1e06_7 codebook.html    |  77634 [31m----[m
+ members/theo/data/ESS1e06_7/ESS1e06_7.csv          |  42360 [31m---[m
+ .../theo/data/ESS3e03_7/ESS3e03_7 codebook.html    |  78245 [31m----[m
+ members/theo/data/ESS3e03_7/ESS3e03_7.csv          |  43001 [31m---[m
+ .../theo/data/ESS4e04_6/ESS4e04_6 codebook.html    | 108282 [31m------[m
+ members/theo/data/ESS4e04_6/ESS4e04_6.csv          |  56753 [31m---[m
+ .../theo/data/ESS5e03_6/ESS5e03_6 codebook.html    | 128449 [31m-------[m
+ members/theo/data/ESS5e03_6/ESS5e03_6.csv          |  52459 [31m---[m
+ .../theo/data/ESS6e02_7/ESS6e02_7 codebook.html    | 125355 [31m-------[m
+ members/theo/data/ESS6e02_7/ESS6e02_7.csv          |  54674 [31m---[m
+ .../theo/data/ESS7e02_3/ESS7e02_3 codebook.html    | 120501 [31m------[m
+ members/theo/data/ESS7e02_3/ESS7e02_3.csv          |  40186 [31m--[m
+ .../theo/data/ESS8e02_3/ESS8e02_3 codebook.html    | 118519 [31m------[m
+ members/theo/data/ESS8e02_3/ESS8e02_3.csv          |  44388 [31m---[m
+ .../theo/data/ESS9e03_3/ESS9e03_3 codebook.html    | 132548 [31m-------[m
+ members/theo/data/ESS9e03_3/ESS9e03_3.csv          |  49520 [31m---[m
+ 26 files changed, 2412283 deletions(-)
+
+[33mcommit 8f7ecbfa2cb165b66a46f38eebba1ce672da5271[m
+Author: theodoret <agathotheodoret14@gmail.com>
+Date:   Thu Jun 4 18:24:50 2026 +0200
+
+    draft with new ESS dataset
+
+ data/main.db                                       |    Bin [31m12288[m -> [32m12288[m bytes
+ members/ivan/templates/ivan/page.html              |      7 [32m+[m[31m-[m
+ members/paul/templates/paul/page.html              |      7 [32m+[m[31m-[m
+ members/theo/__pycache__/app.cpython-313.pyc       |    Bin [31m7118[m -> [32m5316[m bytes
+ members/theo/app.py                                |    148 [32m+[m[31m-[m
+ .../data/ESS10MD_e01/ESS10MD_e01 codebook.html     | 310664 [32m++++++++++++++++[m
+ members/theo/data/ESS10MD_e01/ESS10MD_e01.csv      |    Bin [31m0[m -> [32m1372614810[m bytes
+ .../data/ESS10SCe03_2/ESS10SCe03_2 codebook.html   | 104590 [32m++++++[m
+ members/theo/data/ESS10SCe03_2/ESS10SCe03_2.csv    |  22075 [32m++[m
+ .../theo/data/ESS10e03_3/ESS10e03_3 codebook.html  | 132857 [32m+++++++[m
+ members/theo/data/ESS10e03_3/ESS10e03_3.csv        |  37612 [32m++[m
+ .../data/ESS11MD_e01_2/ESS11MD_e01_2 codebook.html | 347129 [32m++++++++++++++++++[m
+ members/theo/data/ESS11MD_e01_2/ESS11MD_e01_2.csv  |    Bin [31m0[m -> [32m1700228185[m bytes
+ .../theo/data/ESS11e04_1/ESS11e04_1 codebook.html  | 134365 [32m+++++++[m
+ members/theo/data/ESS11e04_1/ESS11e04_1.csv        |  50117 [32m+++[m
+ .../theo/data/ESS1e06_7/ESS1e06_7 codebook.html    |  77634 [32m++++[m
+ members/theo/data/ESS1e06_7/ESS1e06_7.csv          |  42360 [32m+++[m
+ .../theo/data/ESS3e03_7/ESS3e03_7 codebook.html    |  78245 [32m++++[m
+ members/theo/data/ESS3e03_7/ESS3e03_7.csv          |  43001 [32m+++[m
+ .../theo/data/ESS4e04_6/ESS4e04_6 codebook.html    | 108282 [32m++++++[m
+ members/theo/data/ESS4e04_6/ESS4e04_6.csv          |  56753 [32m+++[m
+ .../theo/data/ESS5e03_6/ESS5e03_6 codebook.html    | 128449 [32m+++++++[m
+ members/theo/data/ESS5e03_6/ESS5e03_6.csv          |  52459 [32m+++[m
+ .../theo/data/ESS6e02_7/ESS6e02_7 codebook.html    | 125355 [32m+++++++[m
+ members/theo/data/ESS6e02_7/ESS6e02_7.csv          |  54674 [32m+++[m
+ .../theo/data/ESS7e02_3/ESS7e02_3 codebook.html    | 120501 [32m++++++[m
+ members/theo/data/ESS7e02_3/ESS7e02_3.csv          |  40186 [32m++[m
+ .../theo/data/ESS8e02_3/ESS8e02_3 codebook.html    | 118519 [32m++++++[m
+ members/theo/data/ESS8e02_3/ESS8e02_3.csv          |  44388 [32m+++[m
+ .../theo/data/ESS9e03_3/ESS9e03_3 codebook.html    | 132548 [32m+++++++[m
+ members/theo/data/ESS9e03_3/ESS9e03_3.csv          |  49520 [32m+++[m
+ members/theo/data/ess_country_year.csv             |    736 [32m+[m
+ members/theo/{static => }/data/world-topo.json     |      0
+ members/theo/preprocess_ess.py                     |    235 [32m+[m
+ members/theo/static/data/agriRuralDevelopment.csv  |  13909 [31m-[m
+ members/theo/static/data/cleaned_data.csv          |  13116 [31m-[m
+ members/theo/static/data/ilc_scp04.csv             |   1281 [31m-[m
+ members/theo/static/data/ilc_scp12.csv             |    793 [31m-[m
+ members/theo/static/data/ilc_scp20.csv             |    197 [31m-[m
+ members/theo/static/js/plot.js                     |    459 [32m+[m[31m-[m
+ members/theo/static/js/slider.js                   |     46 [32m+[m[31m-[m
+ members/theo/static/styles/style.css               |    172 [32m+[m[31m-[m
+ members/theo/templates/theo/index.html             |    136 [32m+[m[31m-[m
+ 43 files changed, 2413864 insertions(+), 29661 deletions(-)
