@@ -24,8 +24,7 @@
     <header id="dashboard_header">
         <h1 id="main_title">GDP and Everyday Activities</h1>
         <p class="dashboard-desc" id="main_description">
-            European Social Survey indicators merged with national GDP: weekly working hours,
-            weekday TV time, and how often people meet socially. Select a category, then use the year slider.
+            European Social Survey indicators merged with national GDP: weekly working hours, weekday TV time, and how often people meet socially.
         </p>
     </header>
 
@@ -42,8 +41,7 @@
             <section class="qol-section stack-panel active" data-category="pca" id="sec_pca">
                 <h2 id="title_pca">PCA Overview</h2>
                 <p class="dashboard-desc section-desc">
-                    Principal Component Analysis of log GDP and all three activity indicators for the selected year.
-                    Countries closer together have a similar economic and lifestyle profile.
+                    Principal Component Analysis of GDP and all three activity indicators for the selected year.
                 </p>
                 <div class="viz-row viz-row-pca" id="row_pca">
                     <svg id="svg_pca_scatter" aria-label="PCA scatter plot"></svg>
@@ -53,7 +51,7 @@
             <section class="qol-section stack-panel" data-category="work" id="sec_work">
                 <h2 id="title_work">Working Hours</h2>
                 <p class="dashboard-desc section-desc">
-                    Total hours normally worked per week in the main job (overtime included), country average.
+                    Average total hours normally worked per week in the main job (overtime included).
                 </p>
                 <div class="viz-row" id="row_work">
                     <svg id="svg_work_map" aria-label="Working hours choropleth map"></svg>
@@ -64,7 +62,7 @@
             <section class="qol-section stack-panel" data-category="tv" id="sec_tv">
                 <h2 id="title_tv">TV Time</h2>
                 <p class="dashboard-desc section-desc">
-                    Average weekday TV watching time (hours), derived from ESS category midpoints.
+                    Average weekday TV watching time (hours).
                 </p>
                 <div class="viz-row" id="row_tv">
                     <svg id="svg_tv_map" aria-label="TV time choropleth map"></svg>
@@ -75,7 +73,7 @@
             <section class="qol-section stack-panel" data-category="social" id="sec_social">
                 <h2 id="title_social">Social Meetings</h2>
                 <p class="dashboard-desc section-desc">
-                    How often people meet friends, relatives, or colleagues (1 = never … 7 = every day).
+                    How often people meet friends, relatives, or colleagues (1 = never - 7 = every day).
                 </p>
                 <div class="viz-row" id="row_social">
                     <svg id="svg_social_map" aria-label="Social meeting frequency map"></svg>
