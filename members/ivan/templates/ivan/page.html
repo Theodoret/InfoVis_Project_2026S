@@ -3,16 +3,248 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{ member_name }} - InfoVis Project</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <title>{{ member_name }} - Euro Health Stats</title>
+    <link rel="stylesheet" href="{{ url_for('ivan.static', filename='css/style.css') }}" />
 </head>
-<body>
-    <main class="container">
-        <h1>{{ member_name }}'s Page</h1>
-        <p>This page is maintained in the <strong>members/ivan</strong> folder.</p>
-        <p>Total visits: <strong>{{ visit_count }}</strong></p>
+<body class="ivan-page">
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">❤</div>
+                <div>
+                    <div class="brand-title">Euro Health Stats</div>
+                    <div class="brand-subtitle">Ivan's European map study</div>
+                </div>
+            </div>
 
-        <a class="button secondary" href="{{ url_for('index') }}">Back to main page</a>
-    </main>
+            <nav class="nav-links" aria-label="Primary">
+                <a href="#overview">Overview</a>
+                <a href="#countries">Countries</a>
+                <a href="#indicators">Indicators</a>
+                <a href="#bmi-explorer">BMI</a>
+                <a href="#map-card">Data Explorer</a>
+                <a href="#about">About</a>
+            </nav>
+
+            <div class="search-box" aria-label="Search">Search indicators or countries...</div>
+        </header>
+
+        <main id="overview">
+            <section class="hero">
+                <div class="hero-copy">
+                    <p class="eyebrow">European Health Statistics</p>
+                    <h1>Explore health data across Europe</h1>
+                    <p>
+                        Compare countries, inspect trends, and explore a map focused on Europe.
+                        The visualization below uses D3 and TopoJSON.
+                    </p>
+                </div>
+
+                <div class="hero-graphic" aria-hidden="true">
+                    <div class="pulse pulse-a"></div>
+                    <div class="pulse pulse-b"></div>
+                    <div class="heartbeat">❤</div>
+                </div>
+            </section>
+
+            <section class="stats-grid" id="indicators">
+                <article class="stat-card stat-green">
+                    <span class="stat-label">Life Expectancy</span>
+                    <strong>81.4</strong>
+                    <span class="stat-meta">years</span>
+                </article>
+                <article class="stat-card stat-blue">
+                    <span class="stat-label">Healthcare Expenditure</span>
+                    <strong>€3,622</strong>
+                    <span class="stat-meta">per capita</span>
+                </article>
+                <article class="stat-card stat-orange">
+                    <span class="stat-label">Obesity Rate</span>
+                    <strong>17.0%</strong>
+                    <span class="stat-meta">15+ years</span>
+                </article>
+                <article class="stat-card stat-purple">
+                    <span class="stat-label">Hospital Beds</span>
+                    <strong>5.2</strong>
+                    <span class="stat-meta">per 10,000 people</span>
+                </article>
+            </section>
+
+            <section class="content-grid" id="countries">
+                <article class="panel trend-panel">
+                    <div class="panel-head">
+                        <h2>Life Expectancy Trend</h2>
+                        <span class="panel-badge">2013–2023</span>
+                    </div>
+                    <div class="mini-chart mini-line"></div>
+                </article>
+
+                <article class="panel trend-panel">
+                    <div class="panel-head">
+                        <h2>Healthcare Expenditure</h2>
+                        <span class="panel-badge">EUR</span>
+                    </div>
+                    <div class="mini-chart mini-bars"></div>
+                </article>
+            </section>
+
+            <section class="bmi-section" id="bmi-explorer">
+                <article class="panel bmi-panel">
+                    <div class="panel-head panel-head--stacked">
+                        <div>
+                            <h2>Body Mass Index Explorer</h2>
+                            <p class="panel-description">Compare BMI categories by sex, age, education, year, and country.</p>
+                        </div>
+                        <span class="panel-badge">Eurostat BMI</span>
+                    </div>
+
+                    <div class="bmi-tabs" role="tablist" aria-label="BMI visualization type">
+                        <button class="bmi-tab is-active" type="button" data-bmi-view="line" role="tab" aria-selected="true">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16l4-5 4 3 5-8M5 5v14"/></svg>
+                            <span>Line</span>
+                        </button>
+                        <button class="bmi-tab" type="button" data-bmi-view="bar" role="tab" aria-selected="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M6 17V9M11 17V5M16 17v-7M21 17v-4"/></svg>
+                            <span>Bar</span>
+                        </button>
+                        <button class="bmi-tab" type="button" data-bmi-view="map" role="tab" aria-selected="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>
+                            <span>Map</span>
+                        </button>
+                    </div>
+
+                    <div class="bmi-view is-active" data-bmi-view-panel="line">
+                        <div class="bmi-controls bmi-controls--line">
+                            <label><span>BMI</span><select data-bmi-filter="bmi"></select></label>
+                            <label><span>Country</span><select data-bmi-filter="country"></select></label>
+                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+                        </div>
+
+                        <div class="bmi-visual-wrap">
+                            <div id="bmi-line-chart" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-bmi-summary="line">
+                                <div class="hover-label">Trend</div>
+                                <div class="hover-country" data-bmi-summary-title>—</div>
+                                <div class="hover-stats">
+                                    <div><span>Latest</span><strong data-bmi-summary-value>—</strong></div>
+                                    <div><span>Years</span><strong data-bmi-summary-count>—</strong></div>
+                                </div>
+                                <p class="sidebar-note">Line view follows the selected country across available survey years.</p>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <div class="bmi-view" data-bmi-view-panel="bar">
+                        <div class="bmi-controls bmi-controls--bar">
+                            <label><span>BMI</span><select data-bmi-filter="bmi"></select></label>
+                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+                            <label><span>Year</span><select data-bmi-filter="year"></select></label>
+                        </div>
+
+                        <div class="bmi-visual-wrap">
+                            <div id="bmi-bar-chart" class="bmi-chart bmi-chart--tall"></div>
+                            <aside class="bmi-summary" data-bmi-summary="bar">
+                                <div class="hover-label">Ranking</div>
+                                <div class="hover-country" data-bmi-summary-title>—</div>
+                                <div class="hover-stats">
+                                    <div><span>Highest</span><strong data-bmi-summary-value>—</strong></div>
+                                    <div><span>Countries</span><strong data-bmi-summary-count>—</strong></div>
+                                </div>
+                                <p class="sidebar-note">Bar view ranks every available country for the selected year.</p>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <div class="bmi-view" data-bmi-view-panel="map">
+                        <div class="bmi-controls bmi-controls--map">
+                            <label><span>BMI</span><select data-bmi-filter="bmi"></select></label>
+                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+                            <label><span>Year</span><select data-bmi-filter="year"></select></label>
+                        </div>
+
+                        <div class="bmi-visual-wrap">
+                            <div id="bmi-map-chart" class="bmi-chart bmi-chart--map"></div>
+                            <aside class="bmi-summary" data-bmi-summary="map">
+                                <div class="hover-label">Map Selection</div>
+                                <div class="hover-country" data-bmi-summary-title>—</div>
+                                <div class="hover-stats">
+                                    <div><span>Value</span><strong data-bmi-summary-value>—</strong></div>
+                                    <div><span>Countries</span><strong data-bmi-summary-count>—</strong></div>
+                                </div>
+                                <div class="gdp-legend bmi-map-legend" id="bmi-map-legend"></div>
+                                <p class="sidebar-note">Map view colors countries by the selected BMI percentage.</p>
+                            </aside>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="map-section" id="map-card">
+                <article class="panel map-panel map-panel--large">
+                    <div class="panel-head panel-head--stacked">
+                        <div>
+                            <h2>GDP by Country</h2>
+                            <p class="panel-description">Use the slider to switch between years and see how GDP changes across Europe.</p>
+                        </div>
+                        <span class="panel-badge">GDP choropleth</span>
+                    </div>
+
+                    <div class="map-with-sidebar">
+                        <div id="map" class="map-container map-container--large"></div>
+
+                        <aside class="gdp-sidebar">
+                            <div class="gdp-controls">
+                                <label for="gdp-year-slider">Year</label>
+                                <input id="gdp-year-slider" type="range" min="1960" max="2024" step="1" value="2023" />
+                                <span class="gdp-year-value" id="gdp-year-label">2023</span>
+                            </div>
+
+                            <div class="gdp-legend" id="gdp-legend"></div>
+                            <div class="gdp-hover-card" id="gdp-hover-card">
+                                <div class="hover-label">Hover a country</div>
+                                <div class="hover-country" id="gdp-hover-country">—</div>
+                                <div class="hover-stats">
+                                    <div><span>GDP</span><strong id="gdp-hover-value">—</strong></div>
+                                    <div><span>Year</span><strong id="gdp-hover-year">—</strong></div>
+                                </div>
+                            </div>
+                            <p class="sidebar-note">
+                                The map colors countries by GDP for the selected year.
+                            </p>
+                        </aside>
+                    </div>
+                </article>
+            </section>
+
+            <section class="footer-card" id="about">
+                <div>
+                    <h2>{{ member_name }}'s Page</h2>
+                    <p>
+                        This page is maintained in the <strong>members/ivan</strong> folder and styled to match a clean analytics dashboard.
+                    </p>
+                </div>
+                <div class="visit-pill">Visits: <strong>{{ visit_count }}</strong></div>
+                <a class="back-link" href="{{ url_for('index') }}">Back to main page</a>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script>
+        const topoUrl = "{{ url_for('static', filename='world-topo.json') }}";
+    </script>
+    <script src="{{ url_for('ivan.static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/legend.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/gdp_map.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/controls.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/bmi_explorer.js') }}"></script>
 </body>
 </html>
