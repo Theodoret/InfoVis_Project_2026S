@@ -85,6 +85,8 @@ async function loadEuropeMapFeatures(topoPath = defaultTopoPath, europeBbox = de
 function createEuropeMap(containerSelector, options = {}) {
   const width = options.width || 620;
   const height = options.height || 620;
+  const microstatePanelWidth = Math.max(0, Number(options.microstatePanelWidth) || 0);
+  const mapWidth = Math.max(320, width - microstatePanelWidth);
   const defaultCountryColor = options.defaultCountryColor || '#ddd';
   const strokeColor = options.strokeColor || '#333';
   const strokeWidth = options.strokeWidth ?? 0.5;
@@ -98,6 +100,22 @@ function createEuropeMap(containerSelector, options = {}) {
     .attr('height', height)
     .attr('viewBox', `0 0 ${width} ${height}`)
     .attr('class', options.svgClass || 'europe-map-svg');
+
+  if (microstatePanelWidth) {
+    svg.append('rect')
+      .attr('class', 'microstate-panel-background')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', microstatePanelWidth)
+      .attr('height', height);
+
+    svg.append('line')
+      .attr('class', 'microstate-panel-divider')
+      .attr('x1', microstatePanelWidth)
+      .attr('x2', microstatePanelWidth)
+      .attr('y1', 0)
+      .attr('y2', height);
+  }
 
   let countrySelection = null;
   let drawFeatures = [];
@@ -157,7 +175,11 @@ function createEuropeMap(containerSelector, options = {}) {
       drawFeatures = features;
       const drawCollection = { type: 'FeatureCollection', features: drawFeatures };
 
-      projection = d3.geoMercator().fitSize([width, height], drawCollection);
+      projection = d3.geoMercator().fitSize([mapWidth, height], drawCollection);
+      if (microstatePanelWidth) {
+        const translate = projection.translate();
+        projection.translate([translate[0] + microstatePanelWidth, translate[1]]);
+      }
       path = d3.geoPath().projection(projection);
 
       countrySelection = svg.selectAll('path')
@@ -191,6 +213,9 @@ function createEuropeMap(containerSelector, options = {}) {
     get path() {
       return path;
     },
+    get microstatePanelWidth() {
+      return microstatePanelWidth;
+    },
     setCountryColor,
     resetCountryColors,
     setHoverHandlers,
@@ -207,8 +232,9 @@ window.getCountryIdentifiers = getCountryIdentifiers;
 window.getCountryName = getCountryName;
 
 window.ivanGdpEuropeMap = createEuropeMap('#map', {
-  width: 620,
+  width: 760,
   height: 620,
+  microstatePanelWidth: 140,
   defaultCountryColor: '#ddd',
   strokeColor: '#333',
   strokeWidth: 0.5,

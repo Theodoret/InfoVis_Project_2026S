@@ -8,6 +8,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent
 RAW_CSV = ROOT / "data" / "API_NY.GDP.MKTP.CD_DS2_en_csv_v2_252769.csv"
 OUTPUT_CSV = ROOT / "data" / "europe_gdp.csv"
+RAW_GDP_PER_CAPITA_CSV = ROOT / "data" / "API_NY.GDP.PCAP.CD_DS2_en_csv_v2_273495.csv"
+OUTPUT_GDP_PER_CAPITA_CSV = ROOT / "data" / "europe_gdp_per_capita.csv"
 
 # European countries and nearby transcontinental countries we want to keep on the map.
 # This is intentionally conservative so only Europe remains in the preprocessed file.
@@ -29,9 +31,9 @@ def find_header_row(path: Path) -> int:
     raise RuntimeError("Could not find the CSV header row.")
 
 
-def build_europe_gdp(raw_path: Path, output_path: Path) -> None:
+def build_europe_gdp(raw_path: Path, output_path: Path, label: str = "GDP") -> None:
     if not raw_path.exists():
-        raise FileNotFoundError(f"Raw GDP CSV not found: {raw_path}")
+        raise FileNotFoundError(f"Raw {label} CSV not found: {raw_path}")
 
     header_row = find_header_row(raw_path)
     frame = pd.read_csv(raw_path, skiprows=header_row, encoding="utf-8-sig")
@@ -42,12 +44,14 @@ def build_europe_gdp(raw_path: Path, output_path: Path) -> None:
             raise RuntimeError(f"Missing expected column: {column}")
 
     filtered = frame[frame["Country Code"].astype(str).isin(EUROPEAN_ISO3_CODES)].copy()
+    filtered = filtered.loc[:, ~filtered.columns.astype(str).str.startswith("Unnamed")]
     filtered.sort_values(["Country Name", "Country Code"], inplace=True)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     filtered.to_csv(output_path, index=False, encoding="utf-8")
-    print(f"Wrote {len(filtered)} European GDP rows to {output_path}")
+    print(f"Wrote {len(filtered)} European {label} rows to {output_path}")
 
 
 if __name__ == "__main__":
     build_europe_gdp(RAW_CSV, OUTPUT_CSV)
+    build_europe_gdp(RAW_GDP_PER_CAPITA_CSV, OUTPUT_GDP_PER_CAPITA_CSV, "GDP per capita")

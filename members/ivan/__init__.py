@@ -1,8 +1,11 @@
-from flask import Blueprint, render_template, jsonify, request
-import csv
 from pathlib import Path
 
+from flask import Blueprint, jsonify, render_template, request
+
+from common.correlation import build_gdp_correlation_payload
 from common.database import get_page_visit_count, record_page_visit
+from common.eurostat import EurostatCsvDataset, EurostatDimension
+from common.world_bank import WorldBankWideCsvDataset
 
 # serve blueprint-specific static files from members/ivan/static
 ivan_bp = Blueprint(
@@ -15,8 +18,10 @@ ivan_bp = Blueprint(
 )
 
 GDP_CSV_PATH = Path(__file__).resolve().parents[2] / "data" / "europe_gdp.csv"
+GDP_PER_CAPITA_CSV_PATH = Path(__file__).resolve().parents[2] / "data" / "europe_gdp_per_capita.csv"
 BMI_CSV_PATH = Path(__file__).resolve().parent / "data" / "Body mass index (BMI) by sex, age and educational attainment level.csv"
 DEFAULT_GDP_YEAR = "2023"
+DEFAULT_GDP_METRIC = "total"
 DEFAULT_BMI_FILTERS = {
     "bmi": "BMI_GE30",
     "sex": "T",
@@ -24,6 +29,86 @@ DEFAULT_BMI_FILTERS = {
     "education": "TOTAL",
     "year": "2019",
     "country": "EU27_2020",
+    "gdpScale": "raw",
+    "gdpMetric": DEFAULT_GDP_METRIC,
+    "correlationVariable": "bmi",
+}
+BMI_DIMENSIONS = (
+    EurostatDimension("bmi", "bmi", "Body Mass Index", "bmi", "bmiLabel"),
+    EurostatDimension("education", "isced11", "International Standard Classification of Education (ISCED 2011)", "education", "educationLabel"),
+    EurostatDimension("sex", "sex", "Sex", "sex", "sexLabel"),
+    EurostatDimension("age", "age", "Age class", "age", "ageLabel"),
+    EurostatDimension("country", "geo", "Geopolitical entity (reporting)", "countryCode", "country"),
+)
+GDP_DATASET = WorldBankWideCsvDataset(GDP_CSV_PATH, value_key="gdp")
+GDP_PER_CAPITA_DATASET = WorldBankWideCsvDataset(GDP_PER_CAPITA_CSV_PATH, value_key="gdp")
+GDP_METRICS = {
+    "total": {
+        "label": "GDP",
+        "short_label": "GDP",
+        "description": "total GDP",
+        "dataset": GDP_DATASET,
+        "unit": "million",
+    },
+    "per_capita": {
+        "label": "GDP per capita",
+        "short_label": "GDP per capita",
+        "description": "GDP per capita",
+        "dataset": GDP_PER_CAPITA_DATASET,
+        "unit": "person",
+    },
+}
+BMI_DATASET = EurostatCsvDataset(BMI_CSV_PATH, BMI_DIMENSIONS)
+BMI_CORRELATION_VARIABLES = {
+    "bmi": {
+        "label": "BMI category",
+        "variable_key": "bmi",
+        "variable_label_key": "bmiLabel",
+        "include_dimensions": ("education", "sex", "age"),
+    },
+    "sex": {
+        "label": "Sex",
+        "variable_key": "sex",
+        "variable_label_key": "sexLabel",
+        "include_dimensions": ("bmi", "education", "age"),
+    },
+    "age": {
+        "label": "Age",
+        "variable_key": "age",
+        "variable_label_key": "ageLabel",
+        "include_dimensions": ("bmi", "education", "sex"),
+    },
+    "education": {
+        "label": "Education",
+        "variable_key": "education",
+        "variable_label_key": "educationLabel",
+        "include_dimensions": ("bmi", "sex", "age"),
+    },
+}
+BMI_VIEW_QUERIES = {
+    "line": {
+        "include_year": False,
+        "include_dimensions": ("bmi", "education", "sex", "age", "country"),
+        "sort_key": lambda row: row["year"],
+        "reverse": False,
+    },
+    "bar": {
+        "include_year": True,
+        "include_dimensions": ("bmi", "education", "sex", "age"),
+        "sort_key": lambda row: row["value"],
+        "reverse": True,
+    },
+    "map": {
+        "include_year": True,
+        "include_dimensions": ("bmi", "education", "sex", "age"),
+        "sort_key": lambda row: row["value"],
+        "reverse": True,
+    },
+    "correlation": {
+        "include_year": True,
+        "sort_key": lambda row: row["value"],
+        "reverse": True,
+    },
 }
 
 
@@ -51,153 +136,22 @@ def data():
     return jsonify(payload)
 
 
-def _read_gdp_rows():
-    if not GDP_CSV_PATH.exists():
-        return [], []
-
-    with GDP_CSV_PATH.open("r", encoding="utf-8-sig", newline="") as csv_file:
-        reader = csv.reader(csv_file)
-
-        header = None
-        for row in reader:
-            if row and row[0] == "Country Name":
-                header = row
-                break
-
-        if not header:
-            return [], []
-
-        return header, list(reader)
-
-
-def _records_for_year(rows, year_index: int):
-    records = []
-
-    for row in rows:
-        if len(row) <= year_index:
-            continue
-
-        country_name = row[0].strip() if len(row) > 0 else ""
-        country_code = row[1].strip() if len(row) > 1 else ""
-        raw_value = row[year_index].strip()
-
-        if not country_name or not country_code or not raw_value:
-            continue
-
-        try:
-            gdp_value = float(raw_value)
-        except ValueError:
-            continue
-
-        records.append(
-            {
-                "country": country_name,
-                "countryCode": country_code,
-                "gdp": gdp_value,
-            }
-        )
-
-    return records
-
-
-def _load_gdp_records(year: str):
-    requested_year = str(year).strip()
-    header, rows = _read_gdp_rows()
-
-    if not header:
-        return requested_year, []
-
-    numeric_years = [int(value) for value in header if value.isdigit()]
-    if not numeric_years:
-        return requested_year, []
-
-    if requested_year not in header:
-        requested_year = str(max(numeric_years))
-
-    records = _records_for_year(rows, header.index(requested_year))
-    if records:
-        return requested_year, records
-
-    for fallback_year in sorted(numeric_years, reverse=True):
-        fallback_year = str(fallback_year)
-        fallback_records = _records_for_year(rows, header.index(fallback_year))
-        if fallback_records:
-            return fallback_year, fallback_records
-
-    return requested_year, records
-
-
 @ivan_bp.route("/gdp-data")
 def gdp_data():
     year = request.args.get("year", DEFAULT_GDP_YEAR)
-    resolved_year, records = _load_gdp_records(year)
-    return jsonify({"year": resolved_year, "records": records})
-
-
-def _read_bmi_rows():
-    if not BMI_CSV_PATH.exists():
-        return []
-
-    rows = []
-    with BMI_CSV_PATH.open("r", encoding="utf-8-sig", newline="") as csv_file:
-        for row in csv.DictReader(csv_file):
-            raw_value = row.get("OBS_VALUE", "").strip()
-            if not raw_value:
-                continue
-
-            try:
-                value = float(raw_value)
-            except ValueError:
-                continue
-
-            rows.append(
-                {
-                    "bmi": row.get("bmi", "").strip(),
-                    "bmiLabel": row.get("Body Mass Index", "").strip(),
-                    "education": row.get("isced11", "").strip(),
-                    "educationLabel": row.get("International Standard Classification of Education (ISCED 2011)", "").strip(),
-                    "sex": row.get("sex", "").strip(),
-                    "sexLabel": row.get("Sex", "").strip(),
-                    "age": row.get("age", "").strip(),
-                    "ageLabel": row.get("Age class", "").strip(),
-                    "countryCode": row.get("geo", "").strip(),
-                    "country": row.get("Geopolitical entity (reporting)", "").strip(),
-                    "year": row.get("TIME_PERIOD", "").strip(),
-                    "value": value,
-                }
-            )
-
-    return rows
-
-
-def _option_list(rows, code_key, label_key):
-    seen = {}
-    for row in rows:
-        code = row.get(code_key, "")
-        label = row.get(label_key, "") or code
-        if code and code not in seen:
-            seen[code] = label
-
-    return [{"value": code, "label": label} for code, label in sorted(seen.items(), key=lambda item: item[1])]
-
-
-def _filter_bmi_rows(rows, filters, include_year=True, include_country=True):
-    filtered = []
-    for row in rows:
-        if filters["bmi"] and row["bmi"] != filters["bmi"]:
-            continue
-        if filters["sex"] and row["sex"] != filters["sex"]:
-            continue
-        if filters["age"] and row["age"] != filters["age"]:
-            continue
-        if filters["education"] and row["education"] != filters["education"]:
-            continue
-        if include_year and filters["year"] and row["year"] != filters["year"]:
-            continue
-        if include_country and filters["country"] and row["countryCode"] != filters["country"]:
-            continue
-        filtered.append(row)
-    return filtered
+    metric_key = request.args.get("gdpMetric", DEFAULT_GDP_METRIC)
+    metric = GDP_METRICS.get(metric_key, GDP_METRICS[DEFAULT_GDP_METRIC])
+    resolved_year, records = metric["dataset"].records_for_year(year)
+    return jsonify(
+        {
+            "year": resolved_year,
+            "records": records,
+            "gdpMetric": metric_key if metric_key in GDP_METRICS else DEFAULT_GDP_METRIC,
+            "gdpMetricLabel": metric["label"],
+            "gdpMetricShortLabel": metric["short_label"],
+            "gdpMetricUnit": metric["unit"],
+        }
+    )
 
 
 def _bmi_filters_from_request():
@@ -209,34 +163,78 @@ def _bmi_filters_from_request():
 
 @ivan_bp.route("/bmi-options")
 def bmi_options():
-    rows = _read_bmi_rows()
-    years = sorted({row["year"] for row in rows if row["year"]})
+    options = BMI_DATASET.options()
+    options["gdpScale"] = [
+        {"value": "raw", "label": "Raw"},
+        {"value": "log", "label": "log(value)"},
+    ]
+    options["gdpMetric"] = [
+        {"value": key, "label": value["label"]}
+        for key, value in GDP_METRICS.items()
+    ]
+    options["correlationVariable"] = [
+        {"value": key, "label": value["label"]}
+        for key, value in BMI_CORRELATION_VARIABLES.items()
+    ]
     return jsonify(
         {
             "defaults": DEFAULT_BMI_FILTERS,
-            "options": {
-                "bmi": _option_list(rows, "bmi", "bmiLabel"),
-                "sex": _option_list(rows, "sex", "sexLabel"),
-                "age": _option_list(rows, "age", "ageLabel"),
-                "education": _option_list(rows, "education", "educationLabel"),
-                "country": _option_list(rows, "countryCode", "country"),
-                "year": [{"value": year, "label": year} for year in years],
-            },
+            "options": options,
         }
     )
 
 
 @ivan_bp.route("/bmi-data")
 def bmi_data():
-    rows = _read_bmi_rows()
     filters = _bmi_filters_from_request()
     chart_type = request.args.get("view", "bar")
-
-    if chart_type == "line":
-        records = _filter_bmi_rows(rows, filters, include_year=False, include_country=True)
-        records.sort(key=lambda row: row["year"])
-    else:
-        records = _filter_bmi_rows(rows, filters, include_year=True, include_country=False)
-        records.sort(key=lambda row: row["value"], reverse=True)
+    query = BMI_VIEW_QUERIES.get(chart_type, BMI_VIEW_QUERIES["bar"])
+    records = BMI_DATASET.filtered_records(
+        filters,
+        include_year=query["include_year"],
+        include_dimensions=query["include_dimensions"],
+    )
+    records.sort(key=query["sort_key"], reverse=query["reverse"])
 
     return jsonify({"filters": filters, "records": records})
+
+
+@ivan_bp.route("/bmi-gdp-correlation")
+def bmi_gdp_correlation():
+    filters = _bmi_filters_from_request()
+    metric_key = filters.get("gdpMetric", DEFAULT_GDP_METRIC)
+    metric = GDP_METRICS.get(metric_key, GDP_METRICS[DEFAULT_GDP_METRIC])
+    correlation_variable = filters.get("correlationVariable", "bmi")
+    variable_config = BMI_CORRELATION_VARIABLES.get(correlation_variable, BMI_CORRELATION_VARIABLES["bmi"])
+    selected_metric = filters.get(variable_config["variable_key"])
+    query = BMI_VIEW_QUERIES["correlation"]
+    indicator_records = BMI_DATASET.filtered_records(
+        filters,
+        include_year=query["include_year"],
+        include_dimensions=variable_config["include_dimensions"],
+    )
+    resolved_gdp_year, gdp_records = metric["dataset"].records_for_year(filters["year"])
+    payload = build_gdp_correlation_payload(
+        gdp_records=gdp_records,
+        indicator_records=indicator_records,
+        variable_key=variable_config["variable_key"],
+        variable_label_key=variable_config["variable_label_key"],
+        selected_variable=selected_metric,
+        gdp_scale=filters.get("gdpScale", "raw"),
+        gdp_label=metric["label"],
+    )
+
+    return jsonify(
+        {
+            "filters": filters,
+            "year": filters["year"],
+            "gdpYear": resolved_gdp_year,
+            "gdpMetric": metric_key if metric_key in GDP_METRICS else DEFAULT_GDP_METRIC,
+            "gdpMetricLabel": metric["label"],
+            "gdpMetricShortLabel": metric["short_label"],
+            "gdpMetricUnit": metric["unit"],
+            "correlationVariable": correlation_variable,
+            "correlationVariableLabel": variable_config["label"],
+            **payload,
+        }
+    )

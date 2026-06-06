@@ -111,6 +111,10 @@
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>
                             <span>Map</span>
                         </button>
+                        <button class="bmi-tab" type="button" data-bmi-view="correlation" role="tab" aria-selected="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 15l4-4 3 2 5-7M7 8h.01M12 16h.01M18 10h.01"/></svg>
+                            <span>Correlation with GDP</span>
+                        </button>
                     </div>
 
                     <div class="bmi-view is-active" data-bmi-view-panel="line">
@@ -182,6 +186,52 @@
                             </aside>
                         </div>
                     </div>
+
+                    <div class="bmi-view" data-bmi-view-panel="correlation">
+	                        <div class="bmi-controls bmi-controls--correlation">
+	                            <label><span>Scatter BMI</span><select data-bmi-filter="bmi"></select></label>
+	                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+	                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+	                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+	                            <label><span>Year</span><select data-bmi-filter="year"></select></label>
+	                            <label><span>GDP Metric</span><select data-bmi-filter="gdpMetric"></select></label>
+	                            <label><span>GDP Scale</span><select data-bmi-filter="gdpScale"></select></label>
+	                        </div>
+
+	                        <div class="bmi-visual-wrap">
+	                            <div id="bmi-correlation-scatter" class="bmi-chart"></div>
+	                            <aside class="bmi-summary" data-bmi-summary="correlation">
+	                                <div class="hover-label">GDP Relationship</div>
+	                                <div class="hover-country" data-bmi-summary-title>—</div>
+	                                <div class="hover-stats">
+	                                    <div><span>Pearson</span><strong data-correlation-pearson>—</strong></div>
+	                                    <div><span>Spearman</span><strong data-correlation-spearman>—</strong></div>
+	                                    <div><span>Countries</span><strong data-correlation-count>—</strong></div>
+	                                </div>
+	                                <p class="sidebar-note">Scatter view compares the selected GDP metric with the selected BMI variable.</p>
+	                            </aside>
+	                        </div>
+
+                        <div class="correlation-table-wrap">
+                            <div class="correlation-table-toolbar">
+                                <label>
+                                    <span>Variable</span>
+                                    <select id="bmi-correlation-variable" data-bmi-filter="correlationVariable"></select>
+                                </label>
+                            </div>
+                            <table class="correlation-table" id="bmi-correlation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Variable</th>
+                                        <th>Pearson</th>
+                                        <th>Spearman</th>
+                                        <th>Countries</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </article>
             </section>
 
@@ -190,7 +240,7 @@
                     <div class="panel-head panel-head--stacked">
                         <div>
                             <h2>GDP by Country</h2>
-                            <p class="panel-description">Use the slider to switch between years and see how GDP changes across Europe.</p>
+                            <p class="panel-description">Switch between total GDP and GDP per capita, then use the slider to compare years across Europe.</p>
                         </div>
                         <span class="panel-badge">GDP choropleth</span>
                     </div>
@@ -200,6 +250,11 @@
 
                         <aside class="gdp-sidebar">
                             <div class="gdp-controls">
+                                <label for="gdp-metric-select">Metric</label>
+                                <select id="gdp-metric-select">
+                                    <option value="total">GDP</option>
+                                    <option value="per_capita">GDP per capita</option>
+                                </select>
                                 <label for="gdp-year-slider">Year</label>
                                 <input id="gdp-year-slider" type="range" min="1960" max="2024" step="1" value="2023" />
                                 <span class="gdp-year-value" id="gdp-year-label">2023</span>
@@ -210,12 +265,12 @@
                                 <div class="hover-label">Hover a country</div>
                                 <div class="hover-country" id="gdp-hover-country">—</div>
                                 <div class="hover-stats">
-                                    <div><span>GDP</span><strong id="gdp-hover-value">—</strong></div>
+                                    <div><span id="gdp-hover-metric-label">GDP</span><strong id="gdp-hover-value">—</strong></div>
                                     <div><span>Year</span><strong id="gdp-hover-year">—</strong></div>
                                 </div>
                             </div>
                             <p class="sidebar-note">
-                                The map colors countries by GDP for the selected year.
+                                The map colors countries by the selected GDP metric for the chosen year.
                             </p>
                         </aside>
                     </div>
@@ -242,7 +297,11 @@
         const topoUrl = "{{ url_for('static', filename='world-topo.json') }}";
     </script>
     <script src="{{ url_for('ivan.static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/microstate_callouts.js') }}"></script>
     <script src="{{ url_for('ivan.static', filename='js/legend.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/charts.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/country_codes.js') }}"></script>
+    <script src="{{ url_for('ivan.static', filename='js/eurostat_explorer.js') }}"></script>
     <script src="{{ url_for('ivan.static', filename='js/gdp_map.js') }}"></script>
     <script src="{{ url_for('ivan.static', filename='js/controls.js') }}"></script>
     <script src="{{ url_for('ivan.static', filename='js/bmi_explorer.js') }}"></script>

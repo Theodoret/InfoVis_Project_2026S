@@ -3,9 +3,16 @@
 
 const initialGdpYear = '2023';
 let currentGdpYear = initialGdpYear;
+let currentGdpMetric = 'total';
+let currentGdpMetricLabel = 'GDP';
+let currentGdpMetricUnit = 'million';
 
-async function loadGdpData(year) {
-  const response = await fetch(`/ivan/gdp-data?year=${encodeURIComponent(year)}`);
+async function loadGdpData(year, metric = currentGdpMetric) {
+  const params = new URLSearchParams({
+    year,
+    gdpMetric: metric,
+  });
+  const response = await fetch(`/ivan/gdp-data?${params.toString()}`);
   if (!response.ok) {
     throw new Error(`Failed to load GDP data (${response.status})`);
   }
@@ -14,19 +21,31 @@ async function loadGdpData(year) {
 
 function renderGdpLegend(minValue, maxValue, year) {
   if (window.ivanGdpLegend && typeof window.ivanGdpLegend.renderRange === 'function') {
-    window.ivanGdpLegend.renderRange(minValue, maxValue, year);
+    window.ivanGdpLegend.renderRange(minValue, maxValue, {
+      year,
+      label: currentGdpMetricLabel,
+      unit: currentGdpMetricUnit,
+    });
   }
 }
 
 function renderEmptyGdpLegend(year) {
   if (window.ivanGdpLegend && typeof window.ivanGdpLegend.renderEmpty === 'function') {
-    window.ivanGdpLegend.renderEmpty(year);
+    window.ivanGdpLegend.renderEmpty({
+      year,
+      label: currentGdpMetricLabel,
+      unit: currentGdpMetricUnit,
+    });
   }
 }
 
-function formatCurrency(value) {
+function formatGdpValue(value) {
   if (!Number.isFinite(value)) {
     return 'No data';
+  }
+
+  if (currentGdpMetricUnit === 'person') {
+    return `$${d3.format(',')(Math.round(value))}`;
   }
 
   const millions = Math.round(value / 1_000_000);
@@ -37,21 +56,26 @@ function updateHoverCard(country, gdpValue, year) {
   const countryNode = document.getElementById('gdp-hover-country');
   const valueNode = document.getElementById('gdp-hover-value');
   const yearNode = document.getElementById('gdp-hover-year');
+  const metricNode = document.getElementById('gdp-hover-metric-label');
 
   if (countryNode) countryNode.textContent = country || '—';
-  if (valueNode) valueNode.textContent = Number.isFinite(gdpValue) ? formatCurrency(gdpValue) : '—';
+  if (valueNode) valueNode.textContent = Number.isFinite(gdpValue) ? formatGdpValue(gdpValue) : '—';
   if (yearNode) yearNode.textContent = year || currentGdpYear || '—';
+  if (metricNode) metricNode.textContent = currentGdpMetricLabel;
 }
 
 function clearHoverCard() {
   updateHoverCard('Hover a country', NaN, '—');
 }
 
-async function colorCountriesByGdp(year) {
+async function colorCountriesByGdp(year, metric = currentGdpMetric) {
   const map = await Promise.resolve(window.ivanMapReady);
 
-  const payload = await loadGdpData(year);
+  const payload = await loadGdpData(year, metric);
   currentGdpYear = String(payload.year || year);
+  currentGdpMetric = payload.gdpMetric || metric || 'total';
+  currentGdpMetricLabel = payload.gdpMetricShortLabel || payload.gdpMetricLabel || 'GDP';
+  currentGdpMetricUnit = payload.gdpMetricUnit || 'million';
   const records = Array.isArray(payload.records) ? payload.records : [];
   const validRecords = records.filter(record => Number.isFinite(record.gdp));
 
@@ -59,6 +83,9 @@ async function colorCountriesByGdp(year) {
     console.warn('No GDP records available for coloring');
     if (map && typeof map.resetCountryColors === 'function') {
       map.resetCountryColors();
+    }
+    if (map && map.svg) {
+      map.svg.selectAll('.microstate-callouts').remove();
     }
     renderEmptyGdpLegend(currentGdpYear);
     clearHoverCard();
@@ -129,17 +156,39 @@ async function colorCountriesByGdp(year) {
     });
   }
 
+  if (typeof window.renderMicrostateCallouts === 'function') {
+    window.renderMicrostateCallouts(map, {
+      records: validRecords,
+      valueKey: 'gdp',
+      colorScale,
+      valueFormatter: formatGdpValue,
+      onHover(record, fallbackName) {
+        updateHoverCard(fallbackName, record ? record.gdp : NaN, currentGdpYear);
+      },
+      onLeave() {
+        clearHoverCard();
+      },
+    });
+  }
+
   clearHoverCard();
 }
 
 function setGdpYear(year) {
   currentGdpYear = String(year);
-  return colorCountriesByGdp(currentGdpYear);
+  return colorCountriesByGdp(currentGdpYear, currentGdpMetric);
+}
+
+function setGdpMetric(metric) {
+  currentGdpMetric = String(metric || 'total');
+  return colorCountriesByGdp(currentGdpYear, currentGdpMetric);
 }
 
 window.ivanGdpMap = {
   setYear: setGdpYear,
+  setMetric: setGdpMetric,
   getYear: () => currentGdpYear,
+  getMetric: () => currentGdpMetric,
 };
 
 setGdpYear(initialGdpYear).catch(error => {

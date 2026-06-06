@@ -55,10 +55,57 @@ function createRangeControl(options = {}) {
   };
 }
 
+function createSelectControl(options = {}) {
+  const select = document.querySelector(options.selectSelector);
+  const getValue = options.getValue;
+  const setValue = options.setValue;
+
+  function syncResolvedValue() {
+    if (!select || typeof getValue !== 'function') {
+      return;
+    }
+
+    const resolvedValue = getValue();
+    if (select.value !== String(resolvedValue)) {
+      select.value = resolvedValue;
+    }
+  }
+
+  if (!select) {
+    return {
+      syncResolvedValue,
+    };
+  }
+
+  syncResolvedValue();
+
+  select.addEventListener('change', event => {
+    const value = event.target.value;
+
+    if (typeof setValue === 'function') {
+      Promise.resolve(setValue(value))
+        .then(syncResolvedValue)
+        .catch(error => {
+          console.error('Failed to update select control', error);
+        });
+    }
+  });
+
+  return {
+    syncResolvedValue,
+  };
+}
+
 function initializeControls() {
   if (!window.ivanGdpMap) {
     return;
   }
+
+  window.ivanGdpMetricControl = createSelectControl({
+    selectSelector: '#gdp-metric-select',
+    getValue: window.ivanGdpMap.getMetric,
+    setValue: window.ivanGdpMap.setMetric,
+  });
 
   window.ivanGdpYearControl = createRangeControl({
     sliderSelector: '#gdp-year-slider',
@@ -70,6 +117,7 @@ function initializeControls() {
 }
 
 window.createRangeControl = createRangeControl;
+window.createSelectControl = createSelectControl;
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeControls);
