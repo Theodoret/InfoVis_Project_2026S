@@ -56,6 +56,18 @@ function formatLogGdpAxis(value) {
   return d3.format('.2f')(value);
 }
 
+function isAggregateCountry(record) {
+  const code = String(record && record.countryCode ? record.countryCode : '').toUpperCase();
+  return (
+    !code ||
+    code.startsWith('EU') ||
+    code.startsWith('EA') ||
+    code.startsWith('EEA') ||
+    code.startsWith('EFTA') ||
+    code === 'DE_TOT'
+  );
+}
+
 function renderBmiMapLegend(minValue, maxValue, containerSelector = '#bmi-map-legend') {
   if (typeof window.createGradientLegend !== 'function') {
     return;
@@ -81,8 +93,13 @@ function renderBmiEmpty(view, message) {
 
 async function renderBmiCountryMap(options = {}) {
   const selector = options.selector;
+  const valueFormatter = options.valueFormatter || bmiFormatValue;
+  const colorInterpolator = options.colorInterpolator || d3.interpolateOranges;
+  const defaultCountryColor = options.defaultCountryColor || '#e5e7eb';
+  const strokeColor = options.strokeColor || '#333';
+  const strokeWidth = options.strokeWidth ?? 0.5;
   const records = (options.records || [])
-    .filter(record => Number.isFinite(record.value) && !String(record.countryCode || '').startsWith('EU'));
+    .filter(record => Number.isFinite(record.value) && !isAggregateCountry(record));
 
   if (!records.length) {
     return { data: [], top: null };
@@ -97,7 +114,7 @@ async function renderBmiCountryMap(options = {}) {
 
   const minValue = d3.min(records, record => record.value);
   const maxValue = d3.max(records, record => record.value);
-  const colorScale = d3.scaleSequential(d3.interpolateOranges)
+  const colorScale = d3.scaleSequential(colorInterpolator)
     .domain([minValue, maxValue]);
   const recordByIdentifier = new Map();
 
@@ -120,9 +137,9 @@ async function renderBmiCountryMap(options = {}) {
     width: chartWidth,
     height: mapSize,
     microstatePanelWidth: panelWidth,
-    defaultCountryColor: '#e5e7eb',
-    strokeColor: '#333',
-    strokeWidth: 0.5,
+    defaultCountryColor,
+    strokeColor,
+    strokeWidth,
     svgClass: options.svgClass || 'bmi-map-svg',
   });
 
@@ -144,7 +161,7 @@ async function renderBmiCountryMap(options = {}) {
   map.countrySelection
     .attr('fill', feature => {
       const record = findRecord(feature);
-      return record ? colorScale(record.value) : '#e5e7eb';
+      return record ? colorScale(record.value) : defaultCountryColor;
     });
 
   map.setHoverHandlers({
@@ -166,8 +183,8 @@ async function renderBmiCountryMap(options = {}) {
       }
 
       d3.select(this)
-        .attr('stroke', '#333')
-        .attr('stroke-width', 0.5);
+        .attr('stroke', strokeColor)
+        .attr('stroke-width', strokeWidth);
     },
   });
 
@@ -180,7 +197,7 @@ async function renderBmiCountryMap(options = {}) {
       records,
       valueKey: 'value',
       colorScale,
-      valueFormatter: bmiFormatValue,
+      valueFormatter,
       onHover(record, fallbackName) {
         if (typeof options.onHover === 'function') {
           options.onHover(record, fallbackName);
@@ -223,7 +240,7 @@ function renderBmiLine(records, context) {
 
 function renderBmiBars(records, context) {
   const view = 'bar';
-  const data = records.filter(record => !record.countryCode.startsWith('EU'));
+  const data = records.filter(record => !isAggregateCountry(record));
 
   if (!data.length) {
     renderBmiEmpty(view, 'No BMI ranking data available');
@@ -400,6 +417,7 @@ function renderBmiCorrelation(records, context) {
 }
 
 const bmiExplorer = window.createEurostatExplorer({
+  rootSelector: '#bmi-explorer',
   initialView: 'line',
   optionsUrl: '/ivan/bmi-options',
   dataUrl: '/ivan/bmi-data',
@@ -424,6 +442,8 @@ const bmiExplorer = window.createEurostatExplorer({
   },
 });
 
+window.renderEurostatCountryMap = renderBmiCountryMap;
+window.isAggregateCountry = isAggregateCountry;
 window.bmiExplorer = bmiExplorer;
 
 if (document.readyState === 'loading') {

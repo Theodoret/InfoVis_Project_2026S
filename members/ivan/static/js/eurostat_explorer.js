@@ -1,8 +1,10 @@
 function createEurostatExplorer(config = {}) {
+  const root = config.rootSelector ? document.querySelector(config.rootSelector) : document;
   const state = {
     view: config.initialView,
     options: null,
     defaults: null,
+    root,
   };
 
   function datasetValue(element, key) {
@@ -10,7 +12,7 @@ function createEurostatExplorer(config = {}) {
   }
 
   function getPanel(view = state.view) {
-    return document.querySelector(`[${config.panelAttribute}="${view}"]`);
+    return root ? root.querySelector(`[${config.panelAttribute}="${view}"]`) : null;
   }
 
   function getValues(view = state.view) {
@@ -29,7 +31,7 @@ function createEurostatExplorer(config = {}) {
 
   function setSummary(view, title, value, count) {
     const summarySelector = config.views[view] && config.views[view].summarySelector;
-    const summary = summarySelector ? document.querySelector(summarySelector) : null;
+    const summary = root && summarySelector ? root.querySelector(summarySelector) : null;
     if (!summary) {
       return;
     }
@@ -68,6 +70,7 @@ function createEurostatExplorer(config = {}) {
     await config.renderers[view](records, {
       getValues,
       payload,
+      root,
       setSummary,
       state,
       view,
@@ -77,13 +80,13 @@ function createEurostatExplorer(config = {}) {
   function setView(view) {
     state.view = view;
 
-    document.querySelectorAll(config.tabSelector).forEach(tab => {
+    root.querySelectorAll(config.tabSelector).forEach(tab => {
       const isActive = datasetValue(tab, config.tabDatasetKey) === view;
       tab.classList.toggle('is-active', isActive);
       tab.setAttribute('aria-selected', String(isActive));
     });
 
-    document.querySelectorAll(config.panelSelector).forEach(panel => {
+    root.querySelectorAll(config.panelSelector).forEach(panel => {
       panel.classList.toggle('is-active', datasetValue(panel, config.panelDatasetKey) === view);
     });
 
@@ -94,7 +97,7 @@ function createEurostatExplorer(config = {}) {
   }
 
   function initializeFilters(options, defaults) {
-    document.querySelectorAll(config.panelSelector).forEach(panel => {
+    root.querySelectorAll(config.panelSelector).forEach(panel => {
       panel.querySelectorAll(config.filterSelector).forEach(select => {
         const key = datasetValue(select, config.filterDatasetKey);
         fillSelect(select, options[key] || [], defaults[key]);
@@ -110,6 +113,10 @@ function createEurostatExplorer(config = {}) {
   }
 
   async function initialize() {
+    if (!root) {
+      return;
+    }
+
     const response = await fetch(config.optionsUrl);
     if (!response.ok) {
       throw new Error(`Failed to load Eurostat options (${response.status})`);
@@ -121,7 +128,7 @@ function createEurostatExplorer(config = {}) {
 
     initializeFilters(state.options, state.defaults);
 
-    document.querySelectorAll(config.tabSelector).forEach(tab => {
+    root.querySelectorAll(config.tabSelector).forEach(tab => {
       tab.addEventListener('click', () => setView(datasetValue(tab, config.tabDatasetKey)));
     });
 

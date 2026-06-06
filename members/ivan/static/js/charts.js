@@ -114,13 +114,24 @@ function renderLineChart(options = {}) {
     .map(record => ({ ...record, __xNumber: Number(record[xKey]) }))
     .filter(record => Number.isFinite(record.__xNumber))
     .sort((a, b) => a.__xNumber - b.__xNumber);
+  const yMax = d3.max(data, record => record[yKey]) || 100;
+  let yDomain = [Number.isFinite(options.yDomainMin) ? options.yDomainMin : 0, yMax];
+
+  if (Array.isArray(options.yDomain) && options.yDomain.length === 2) {
+    yDomain = options.yDomain;
+  } else if (options.yDomainMin === 'auto') {
+    const yMin = d3.min(data, record => record[yKey]);
+    const spread = yMax - yMin;
+    const padding = spread > 0 ? spread * 0.16 : Math.max(1, yMax * 0.04);
+    yDomain = [yMin - padding, yMax + padding];
+  }
 
   const x = d3.scalePoint()
     .domain(data.map(record => record[xKey]))
     .range([0, innerWidth])
     .padding(0.4);
   const y = d3.scaleLinear()
-    .domain([0, d3.max(data, record => record[yKey]) || 100])
+    .domain(yDomain)
     .nice()
     .range([innerHeight, 0]);
 
