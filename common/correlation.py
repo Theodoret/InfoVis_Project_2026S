@@ -142,7 +142,8 @@ def build_gdp_correlation_payload(
     variable_labels: dict[str, str] = {}
 
     for record in indicator_records:
-        iso3 = EUROSTAT_TO_ISO3.get(record.get("countryCode", ""))
+        raw_country_code = record.get("iso3") or record.get("countryCode", "")
+        iso3 = EUROSTAT_TO_ISO3.get(raw_country_code, raw_country_code if len(raw_country_code) == 3 else "")
         if not iso3 or iso3 not in gdp_by_iso3:
             continue
 

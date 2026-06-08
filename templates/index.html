@@ -3,19 +3,693 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>InfoVis Project</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <title>InfoVis Project - European Indicators</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}" />
 </head>
-<body>
-    <main class="container">
-        <h1>InfoVis Project 2026S</h1>
-        <p>Select a page:</p>
+<body class="ivan-page sector-page">
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">EU</div>
+                <div>
+                    <div class="brand-title">European Indicators</div>
+                    <div class="brand-subtitle">GDP, healthcare, education, and activities</div>
+                </div>
+            </div>
 
-        <div class="button-group">
-            <a class="button" href="{{ url_for('paul.page') }}">Paul</a>
-            <a class="button" href="{{ url_for('theo.page') }}">Theo</a>
-            <a class="button" href="{{ url_for('ivan.page') }}">Ivan</a>
-        </div>
-    </main>
+            <nav class="nav-links" aria-label="Primary">
+                <a href="#map-card">GDP</a>
+                <a href="#summary-analysis">Summary</a>
+                <a href="#healthcare">Healthcare</a>
+                <a href="#education">Education</a>
+                <a href="#activities">Activities</a>
+            </nav>
+
+            <div class="search-box" aria-label="Search">Explore countries and indicators...</div>
+        </header>
+
+        <main>
+            <section class="map-section" id="map-card">
+                <article class="panel map-panel map-panel--large">
+                    <div class="panel-head panel-head--stacked">
+                        <div>
+                            <h2>GDP by Country</h2>
+                            <p class="panel-description">Switch between total GDP and GDP per capita, then use the slider to compare years across Europe.</p>
+                        </div>
+                        <span class="panel-badge">GDP choropleth</span>
+                    </div>
+
+                    <div class="map-with-sidebar">
+                        <div id="map" class="map-container map-container--large"></div>
+
+                        <aside class="gdp-sidebar">
+                            <div class="gdp-controls">
+                                <label for="gdp-metric-select">Metric</label>
+                                <select id="gdp-metric-select">
+                                    <option value="total">GDP</option>
+                                    <option value="per_capita">GDP per capita</option>
+                                </select>
+                                <label for="gdp-year-slider">Year</label>
+                                <input id="gdp-year-slider" type="range" min="1960" max="2024" step="1" value="2023" />
+                                <span class="gdp-year-value" id="gdp-year-label">2023</span>
+                            </div>
+
+                            <div class="gdp-legend" id="gdp-legend"></div>
+                            <div class="gdp-hover-card" id="gdp-hover-card">
+                                <div class="hover-label">Hover a country</div>
+                                <div class="hover-country" id="gdp-hover-country">-</div>
+                                <div class="hover-stats">
+                                    <div><span id="gdp-hover-metric-label">GDP</span><strong id="gdp-hover-value">-</strong></div>
+                                    <div><span>Year</span><strong id="gdp-hover-year">-</strong></div>
+                                </div>
+                            </div>
+                            <p class="sidebar-note">The map colors countries by the selected GDP metric for the chosen year.</p>
+                        </aside>
+                    </div>
+                </article>
+            </section>
+
+            <section class="stats-grid" id="overview">
+                <article class="stat-card stat-green">
+                    <span class="stat-label">Healthcare</span>
+                    <strong>3</strong>
+                    <span class="stat-meta">BMI, life expectancy, unmet needs</span>
+                </article>
+                <article class="stat-card stat-blue">
+                    <span class="stat-label">Education</span>
+                    <strong>4</strong>
+                    <span class="stat-meta">expenditure and completion metrics</span>
+                </article>
+                <article class="stat-card stat-orange">
+                    <span class="stat-label">GDP Link</span>
+                    <strong>2</strong>
+                    <span class="stat-meta">total and per-capita GDP</span>
+                </article>
+                <article class="stat-card stat-purple">
+                    <span class="stat-label">Activities</span>
+                    <strong>Next</strong>
+                    <span class="stat-meta">ready for future data</span>
+                </article>
+            </section>
+
+            <section class="bmi-section summary-section" id="summary-analysis">
+                <article class="panel bmi-panel">
+                    <div class="panel-head panel-head--stacked sector-panel-head">
+                        <div>
+                            <h2>Summary Analysis</h2>
+                            <p class="panel-description">Combine selected indicator values into a 0-1 country score, then compare that score with GDP.</p>
+                        </div>
+                        <span class="panel-badge">Standardized score</span>
+                    </div>
+
+                    <div class="standardization-toolbar summary-toolbar" data-standardization-root="summary">
+                        <label>
+                            <span>Dataset</span>
+                            <select id="summary-dataset-select"></select>
+                        </label>
+                        <label>
+                            <span>GDP Metric</span>
+                            <select id="summary-gdp-metric-select"></select>
+                        </label>
+                        <label>
+                            <span>GDP Scale</span>
+                            <select id="summary-gdp-scale-select"></select>
+                        </label>
+                        <label class="is-hidden">
+                            <span>Values</span>
+                            <select data-standardize-filter="standardize"><option value="1">0-1 score</option></select>
+                        </label>
+                    </div>
+
+                    <div class="bmi-controls summary-filter-controls" id="summary-filter-controls"></div>
+
+                    <div class="summary-analysis-grid">
+                        <aside class="bmi-summary summary-card">
+                            <div class="hover-label">Pearson</div>
+                            <div class="hover-country" data-summary-pearson>-</div>
+                            <p class="sidebar-note">Linear relationship between GDP and the combined standardized score.</p>
+                        </aside>
+                        <aside class="bmi-summary summary-card">
+                            <div class="hover-label">Spearman</div>
+                            <div class="hover-country" data-summary-spearman>-</div>
+                            <p class="sidebar-note">Rank relationship between GDP and the combined standardized score.</p>
+                        </aside>
+                        <aside class="bmi-summary summary-card">
+                            <div class="hover-label">Countries</div>
+                            <div class="hover-country" data-summary-count>-</div>
+                            <p class="sidebar-note" data-summary-meta>Choose a dataset to calculate the score.</p>
+                        </aside>
+                    </div>
+
+                    <div class="correlation-table-wrap summary-table-wrap">
+                        <table class="correlation-table" id="summary-score-table">
+                            <thead>
+                                <tr>
+                                    <th>Country</th>
+                                    <th>Standardized score</th>
+                                    <th>GDP</th>
+                                    <th>Values combined</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </article>
+            </section>
+
+            <div class="anchor-target" id="healthcare"></div>
+
+            <section class="bmi-section dashboard-subsection is-active" id="bmi-explorer" data-sector-panel="healthcare">
+                <article class="panel bmi-panel">
+                    <div class="panel-head panel-head--stacked sector-panel-head">
+                        <div>
+                            <h2>Body Mass Index Explorer</h2>
+                            <p class="panel-description">Compare BMI categories by sex, age, education, year, and country.</p>
+                        </div>
+                        <label class="sector-switcher" for="bmi-healthcare-data-select">
+                            <span>Healthcare data</span>
+                            <select id="bmi-healthcare-data-select" data-healthcare-data-select>
+                                <option value="bmi-explorer">Body Mass Index</option>
+                                <option value="life-expectancy-explorer">Life expectancy</option>
+                                <option value="unmet-needs-explorer">Unmet medical needs</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="bmi-tabs" role="tablist" aria-label="BMI visualization type">
+                        <button class="bmi-tab is-active" type="button" data-bmi-view="line" role="tab" aria-selected="true">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16l4-5 4 3 5-8M5 5v14"/></svg>
+                            <span>Line</span>
+                        </button>
+                        <button class="bmi-tab" type="button" data-bmi-view="bar" role="tab" aria-selected="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M6 17V9M11 17V5M16 17v-7M21 17v-4"/></svg>
+                            <span>Bar</span>
+                        </button>
+                        <button class="bmi-tab" type="button" data-bmi-view="map" role="tab" aria-selected="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg>
+                            <span>Map</span>
+                        </button>
+                        <button class="bmi-tab" type="button" data-bmi-view="correlation" role="tab" aria-selected="false">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 15l4-4 3 2 5-7M7 8h.01M12 16h.01M18 10h.01"/></svg>
+                            <span>Correlation with GDP</span>
+                        </button>
+                    </div>
+
+                    <div class="standardization-toolbar" data-standardization-root="bmi">
+                        <label><span>Values</span><select data-standardize-filter="standardize"><option value="0">Raw values</option><option value="1">0-1 score</option></select></label>
+                    </div>
+
+                    <div class="bmi-view is-active" data-bmi-view-panel="line">
+                        <div class="bmi-controls bmi-controls--line">
+                            <label><span>BMI</span><select data-bmi-filter="bmi"></select></label>
+                            <label><span>Country</span><select data-bmi-filter="country"></select></label>
+                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="bmi-line-chart" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-bmi-summary="line">
+                                <div class="hover-label">Trend</div>
+                                <div class="hover-country" data-bmi-summary-title>-</div>
+                                <div class="hover-stats">
+                                    <div><span>Latest</span><strong data-bmi-summary-value>-</strong></div>
+                                    <div><span>Years</span><strong data-bmi-summary-count>-</strong></div>
+                                </div>
+                                <p class="sidebar-note">Line view follows the selected country across available survey years.</p>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <div class="bmi-view" data-bmi-view-panel="bar">
+                        <div class="bmi-controls bmi-controls--bar">
+                            <label><span>BMI</span><select data-bmi-filter="bmi"></select></label>
+                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+                            <label><span>Year</span><select data-bmi-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="bmi-bar-chart" class="bmi-chart bmi-chart--tall"></div>
+                            <aside class="bmi-summary" data-bmi-summary="bar">
+                                <div class="hover-label">Ranking</div>
+                                <div class="hover-country" data-bmi-summary-title>-</div>
+                                <div class="hover-stats">
+                                    <div><span>Highest</span><strong data-bmi-summary-value>-</strong></div>
+                                    <div><span>Countries</span><strong data-bmi-summary-count>-</strong></div>
+                                </div>
+                                <p class="sidebar-note">Bar view ranks every available country for the selected year.</p>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <div class="bmi-view" data-bmi-view-panel="map">
+                        <div class="bmi-controls bmi-controls--map">
+                            <label><span>BMI</span><select data-bmi-filter="bmi"></select></label>
+                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+                            <label><span>Year</span><select data-bmi-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="bmi-map-chart" class="bmi-chart bmi-chart--map"></div>
+                            <aside class="bmi-summary" data-bmi-summary="map">
+                                <div class="hover-label">Map Selection</div>
+                                <div class="hover-country" data-bmi-summary-title>-</div>
+                                <div class="hover-stats">
+                                    <div><span>Value</span><strong data-bmi-summary-value>-</strong></div>
+                                    <div><span>Countries</span><strong data-bmi-summary-count>-</strong></div>
+                                </div>
+                                <div class="gdp-legend bmi-map-legend" id="bmi-map-legend"></div>
+                                <p class="sidebar-note">Map view colors countries by the selected BMI percentage.</p>
+                            </aside>
+                        </div>
+                    </div>
+
+                    <div class="bmi-view" data-bmi-view-panel="correlation">
+                        <div class="bmi-controls bmi-controls--correlation">
+                            <label><span>Scatter BMI</span><select data-bmi-filter="bmi"></select></label>
+                            <label><span>Sex</span><select data-bmi-filter="sex"></select></label>
+                            <label><span>Age</span><select data-bmi-filter="age"></select></label>
+                            <label><span>Education</span><select data-bmi-filter="education"></select></label>
+                            <label><span>Year</span><select data-bmi-filter="year"></select></label>
+                            <label><span>GDP Metric</span><select data-bmi-filter="gdpMetric"></select></label>
+                            <label><span>GDP Scale</span><select data-bmi-filter="gdpScale"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="bmi-correlation-scatter" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-bmi-summary="correlation">
+                                <div class="hover-label">GDP Relationship</div>
+                                <div class="hover-country" data-bmi-summary-title>-</div>
+                                <div class="hover-stats">
+                                    <div><span>Pearson</span><strong data-correlation-pearson>-</strong></div>
+                                    <div><span>Spearman</span><strong data-correlation-spearman>-</strong></div>
+                                    <div><span>Countries</span><strong data-correlation-count>-</strong></div>
+                                </div>
+                                <p class="sidebar-note">Scatter view compares the selected GDP metric with the selected BMI variable.</p>
+                            </aside>
+                        </div>
+                        <div class="correlation-table-wrap">
+                            <div class="correlation-table-toolbar">
+                                <label><span>Variable</span><select id="bmi-correlation-variable" data-bmi-filter="correlationVariable"></select></label>
+                            </div>
+                            <table class="correlation-table" id="bmi-correlation-table">
+                                <thead><tr><th>Variable</th><th>Pearson</th><th>Spearman</th><th>Countries</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="bmi-section dashboard-subsection" id="life-expectancy-explorer" data-sector-panel="healthcare" data-indicator-explorer="life">
+                <article class="panel bmi-panel">
+                    <div class="panel-head panel-head--stacked sector-panel-head">
+                        <div>
+                            <h2>Life Expectancy Explorer</h2>
+                            <p class="panel-description">Compare life expectancy by sex, age, year, and country.</p>
+                        </div>
+                        <label class="sector-switcher" for="life-healthcare-data-select">
+                            <span>Healthcare data</span>
+                            <select id="life-healthcare-data-select" data-healthcare-data-select>
+                                <option value="bmi-explorer">Body Mass Index</option>
+                                <option value="life-expectancy-explorer">Life expectancy</option>
+                                <option value="unmet-needs-explorer">Unmet medical needs</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="bmi-tabs" role="tablist" aria-label="Life expectancy visualization type">
+                        <button class="bmi-tab is-active" type="button" data-indicator-view="line" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16l4-5 4 3 5-8M5 5v14"/></svg><span>Line</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="bar" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M6 17V9M11 17V5M16 17v-7M21 17v-4"/></svg><span>Bar</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="map" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg><span>Map</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="correlation" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 15l4-4 3 2 5-7M7 8h.01M12 16h.01M18 10h.01"/></svg><span>Correlation with GDP</span></button>
+                    </div>
+
+                    <div class="standardization-toolbar" data-standardization-root="life">
+                        <label><span>Values</span><select data-standardize-filter="standardize"><option value="0">Raw values</option><option value="1">0-1 score</option></select></label>
+                    </div>
+
+                    <div class="bmi-view is-active" data-indicator-view-panel="line">
+                        <div class="bmi-controls bmi-controls--line">
+                            <label><span>Country</span><select data-indicator-filter="country"></select></label>
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="life-line-chart" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-indicator-summary="line">
+                                <div class="hover-label">Trend</div>
+                                <div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Latest</span><strong data-indicator-summary-value>-</strong></div><div><span>Years</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <p class="sidebar-note">Line view follows the selected country across available years.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="bar">
+                        <div class="bmi-controls bmi-controls--bar">
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="life-bar-chart" class="bmi-chart bmi-chart--tall"></div>
+                            <aside class="bmi-summary" data-indicator-summary="bar">
+                                <div class="hover-label">Ranking</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Highest</span><strong data-indicator-summary-value>-</strong></div><div><span>Countries</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <p class="sidebar-note">Bar view ranks every available country for the selected year.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="map">
+                        <div class="bmi-controls bmi-controls--map">
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="life-map-chart" class="bmi-chart bmi-chart--map"></div>
+                            <aside class="bmi-summary" data-indicator-summary="map">
+                                <div class="hover-label">Map Selection</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Value</span><strong data-indicator-summary-value>-</strong></div><div><span>Countries</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <div class="gdp-legend bmi-map-legend" id="life-map-legend"></div>
+                                <p class="sidebar-note">Map view colors countries by the selected life expectancy value.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="correlation">
+                        <div class="bmi-controls bmi-controls--correlation">
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                            <label><span>GDP Metric</span><select data-indicator-filter="gdpMetric"></select></label>
+                            <label><span>GDP Scale</span><select data-indicator-filter="gdpScale"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="life-correlation-scatter" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-indicator-summary="correlation">
+                                <div class="hover-label">GDP Relationship</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Pearson</span><strong data-correlation-pearson>-</strong></div><div><span>Spearman</span><strong data-correlation-spearman>-</strong></div><div><span>Countries</span><strong data-correlation-count>-</strong></div></div>
+                                <p class="sidebar-note">Scatter view compares the selected GDP metric with life expectancy.</p>
+                            </aside>
+                        </div>
+                        <div class="correlation-table-wrap">
+                            <div class="correlation-table-toolbar"><label><span>Variable</span><select id="life-correlation-variable" data-indicator-filter="correlationVariable"></select></label></div>
+                            <table class="correlation-table" id="life-correlation-table"><thead><tr><th>Variable</th><th>Pearson</th><th>Spearman</th><th>Countries</th></tr></thead><tbody></tbody></table>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="bmi-section dashboard-subsection" id="unmet-needs-explorer" data-sector-panel="healthcare" data-indicator-explorer="unmet">
+                <article class="panel bmi-panel">
+                    <div class="panel-head panel-head--stacked sector-panel-head">
+                        <div>
+                            <h2>Unmet Medical Needs Explorer</h2>
+                            <p class="panel-description">Compare self-reported unmet needs by reason, sex, age, education, year, and country.</p>
+                        </div>
+                        <label class="sector-switcher" for="unmet-healthcare-data-select">
+                            <span>Healthcare data</span>
+                            <select id="unmet-healthcare-data-select" data-healthcare-data-select>
+                                <option value="bmi-explorer">Body Mass Index</option>
+                                <option value="life-expectancy-explorer">Life expectancy</option>
+                                <option value="unmet-needs-explorer">Unmet medical needs</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="bmi-tabs" role="tablist" aria-label="Unmet medical needs visualization type">
+                        <button class="bmi-tab is-active" type="button" data-indicator-view="line" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16l4-5 4 3 5-8M5 5v14"/></svg><span>Line</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="bar" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M6 17V9M11 17V5M16 17v-7M21 17v-4"/></svg><span>Bar</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="map" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg><span>Map</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="correlation" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 15l4-4 3 2 5-7M7 8h.01M12 16h.01M18 10h.01"/></svg><span>Correlation with GDP</span></button>
+                    </div>
+
+                    <div class="standardization-toolbar" data-standardization-root="unmet">
+                        <label><span>Values</span><select data-standardize-filter="standardize"><option value="0">Raw values</option><option value="1">0-1 score</option></select></label>
+                    </div>
+
+                    <div class="bmi-view is-active" data-indicator-view-panel="line">
+                        <div class="bmi-controls bmi-controls--line">
+                            <label><span>Reason</span><select data-indicator-filter="reason"></select></label>
+                            <label><span>Country</span><select data-indicator-filter="country"></select></label>
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                            <label><span>Education</span><select data-indicator-filter="education"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="unmet-line-chart" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-indicator-summary="line">
+                                <div class="hover-label">Trend</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Latest</span><strong data-indicator-summary-value>-</strong></div><div><span>Years</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <p class="sidebar-note">Line view follows the selected country across available years.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="bar">
+                        <div class="bmi-controls bmi-controls--bar">
+                            <label><span>Reason</span><select data-indicator-filter="reason"></select></label>
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                            <label><span>Education</span><select data-indicator-filter="education"></select></label>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="unmet-bar-chart" class="bmi-chart bmi-chart--tall"></div>
+                            <aside class="bmi-summary" data-indicator-summary="bar">
+                                <div class="hover-label">Ranking</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Highest</span><strong data-indicator-summary-value>-</strong></div><div><span>Countries</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <p class="sidebar-note">Bar view ranks every available country for the selected year.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="map">
+                        <div class="bmi-controls bmi-controls--map">
+                            <label><span>Reason</span><select data-indicator-filter="reason"></select></label>
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                            <label><span>Education</span><select data-indicator-filter="education"></select></label>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="unmet-map-chart" class="bmi-chart bmi-chart--map"></div>
+                            <aside class="bmi-summary" data-indicator-summary="map">
+                                <div class="hover-label">Map Selection</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Value</span><strong data-indicator-summary-value>-</strong></div><div><span>Countries</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <div class="gdp-legend bmi-map-legend" id="unmet-map-legend"></div>
+                                <p class="sidebar-note">Map view colors countries by the selected unmet needs percentage.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="correlation">
+                        <div class="bmi-controls bmi-controls--correlation">
+                            <label><span>Reason</span><select data-indicator-filter="reason"></select></label>
+                            <label><span>Sex</span><select data-indicator-filter="sex"></select></label>
+                            <label><span>Age</span><select data-indicator-filter="age"></select></label>
+                            <label><span>Education</span><select data-indicator-filter="education"></select></label>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                            <label><span>GDP Metric</span><select data-indicator-filter="gdpMetric"></select></label>
+                            <label><span>GDP Scale</span><select data-indicator-filter="gdpScale"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="unmet-correlation-scatter" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-indicator-summary="correlation">
+                                <div class="hover-label">GDP Relationship</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Pearson</span><strong data-correlation-pearson>-</strong></div><div><span>Spearman</span><strong data-correlation-spearman>-</strong></div><div><span>Countries</span><strong data-correlation-count>-</strong></div></div>
+                                <p class="sidebar-note">Scatter view compares the selected GDP metric with unmet medical needs.</p>
+                            </aside>
+                        </div>
+                        <div class="correlation-table-wrap">
+                            <div class="correlation-table-toolbar"><label><span>Variable</span><select id="unmet-correlation-variable" data-indicator-filter="correlationVariable"></select></label></div>
+                            <table class="correlation-table" id="unmet-correlation-table"><thead><tr><th>Variable</th><th>Pearson</th><th>Spearman</th><th>Countries</th></tr></thead><tbody></tbody></table>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <div class="anchor-target" id="education"></div>
+
+            <section class="bmi-section" id="education-explorer" data-indicator-explorer="education">
+                <article class="panel bmi-panel">
+                    <div class="panel-head panel-head--stacked sector-panel-head">
+                        <div>
+                            <h2>Education Explorer</h2>
+                            <p class="panel-description">Compare education expenditure and completion rates by year and country.</p>
+                        </div>
+                        <label class="sector-switcher" for="education-data-select">
+                            <span>Education data</span>
+                            <select id="education-data-select">
+                                <option value="completion_upper_secondary">Upper secondary completion</option>
+                                <option value="completion_lower_secondary">Lower secondary completion</option>
+                                <option value="completion_primary">Primary completion</option>
+                                <option value="expenditure">Education expenditure</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <div class="bmi-tabs" role="tablist" aria-label="Education visualization type">
+                        <button class="bmi-tab is-active" type="button" data-indicator-view="line" role="tab" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M5 16l4-5 4 3 5-8M5 5v14"/></svg><span>Line</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="bar" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 19h18M6 17V9M11 17V5M16 17v-7M21 17v-4"/></svg><span>Bar</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="map" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="9" r="2.4"/></svg><span>Map</span></button>
+                        <button class="bmi-tab" type="button" data-indicator-view="correlation" role="tab" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 15l4-4 3 2 5-7M7 8h.01M12 16h.01M18 10h.01"/></svg><span>Correlation with GDP</span></button>
+                    </div>
+
+                    <div class="standardization-toolbar" data-standardization-root="education">
+                        <label><span>Values</span><select data-standardize-filter="standardize"><option value="0">Raw values</option><option value="1">0-1 score</option></select></label>
+                    </div>
+
+                    <div class="bmi-view is-active" data-indicator-view-panel="line">
+                        <div class="bmi-controls bmi-controls--line">
+                            <select class="is-hidden" data-indicator-filter="metric" aria-hidden="true" tabindex="-1"></select>
+                            <label><span>Country</span><select data-indicator-filter="country"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="education-line-chart" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-indicator-summary="line">
+                                <div class="hover-label">Trend</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Latest</span><strong data-indicator-summary-value>-</strong></div><div><span>Years</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <p class="sidebar-note">Line view follows the selected country across available years.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="bar">
+                        <div class="bmi-controls bmi-controls--bar">
+                            <select class="is-hidden" data-indicator-filter="metric" aria-hidden="true" tabindex="-1"></select>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="education-bar-chart" class="bmi-chart bmi-chart--tall"></div>
+                            <aside class="bmi-summary" data-indicator-summary="bar">
+                                <div class="hover-label">Ranking</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Highest</span><strong data-indicator-summary-value>-</strong></div><div><span>Countries</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <p class="sidebar-note">Bar view ranks every available country for the selected year.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="map">
+                        <div class="bmi-controls bmi-controls--map">
+                            <select class="is-hidden" data-indicator-filter="metric" aria-hidden="true" tabindex="-1"></select>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="education-map-chart" class="bmi-chart bmi-chart--map"></div>
+                            <aside class="bmi-summary" data-indicator-summary="map">
+                                <div class="hover-label">Map Selection</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Value</span><strong data-indicator-summary-value>-</strong></div><div><span>Countries</span><strong data-indicator-summary-count>-</strong></div></div>
+                                <div class="gdp-legend bmi-map-legend" id="education-map-legend"></div>
+                                <p class="sidebar-note">Map view colors countries by the selected education metric.</p>
+                            </aside>
+                        </div>
+                    </div>
+                    <div class="bmi-view" data-indicator-view-panel="correlation">
+                        <div class="bmi-controls bmi-controls--correlation">
+                            <select class="is-hidden" data-indicator-filter="metric" aria-hidden="true" tabindex="-1"></select>
+                            <label><span>Year</span><select data-indicator-filter="year"></select></label>
+                            <label><span>GDP Metric</span><select data-indicator-filter="gdpMetric"></select></label>
+                            <label><span>GDP Scale</span><select data-indicator-filter="gdpScale"></select></label>
+                        </div>
+                        <div class="bmi-visual-wrap">
+                            <div id="education-correlation-scatter" class="bmi-chart"></div>
+                            <aside class="bmi-summary" data-indicator-summary="correlation">
+                                <div class="hover-label">GDP Relationship</div><div class="hover-country" data-indicator-summary-title>-</div>
+                                <div class="hover-stats"><div><span>Pearson</span><strong data-correlation-pearson>-</strong></div><div><span>Spearman</span><strong data-correlation-spearman>-</strong></div><div><span>Countries</span><strong data-correlation-count>-</strong></div></div>
+                                <p class="sidebar-note">Scatter view compares the selected GDP metric with education outcomes.</p>
+                            </aside>
+                        </div>
+                        <div class="correlation-table-wrap">
+                            <div class="correlation-table-toolbar"><label><span>Variable</span><select id="education-correlation-variable" data-indicator-filter="correlationVariable"></select></label></div>
+                            <table class="correlation-table" id="education-correlation-table"><thead><tr><th>Variable</th><th>Pearson</th><th>Spearman</th><th>Countries</th></tr></thead><tbody></tbody></table>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="bmi-section" id="activities">
+                <article class="panel">
+                    <div class="panel-head panel-head--stacked">
+                        <div>
+                            <h2>Activities</h2>
+                            <p class="panel-description">Future activity indicators can plug into the same country-level module: define a dataset, defaults, and filters, then mount another explorer here.</p>
+                        </div>
+                        <span class="panel-badge">Coming next</span>
+                    </div>
+                    <div class="content-grid">
+                        <div class="mini-chart mini-line"></div>
+                        <div class="mini-chart mini-bars"></div>
+                        <div class="mini-chart"></div>
+                    </div>
+                </article>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson-client@3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <script>
+        const topoUrl = "{{ url_for('static', filename='world-topo.json') }}";
+        window.sectorApiBase = "/healthcare";
+        window.countryIndicatorExplorerConfigs = [
+            {
+                slug: 'life',
+                apiBase: '/healthcare',
+                rootSelector: '#life-expectancy-explorer',
+                shortLabel: 'life expectancy',
+                valueLabel: 'Life expectancy',
+                valueUnit: 'years',
+                colorInterpolator: d3.interpolateGreens,
+                gradient: 'linear-gradient(90deg, #ecfdf5 0%, #a7f3d0 35%, #10b981 70%, #065f46 100%)',
+                lineColor: '#059669',
+                barColor: '#059669',
+                pointColor: '#059669',
+                yDomainMin: 'auto',
+                defaultCorrelationVariable: 'age',
+            },
+            {
+                slug: 'unmet',
+                apiBase: '/healthcare',
+                rootSelector: '#unmet-needs-explorer',
+                shortLabel: 'unmet needs',
+                valueLabel: 'Unmet needs percentage',
+                valueUnit: 'percent',
+                colorInterpolator: d3.interpolateOrRd,
+                gradient: 'linear-gradient(90deg, #fff7ed 0%, #fed7aa 35%, #fb923c 70%, #dc2626 100%)',
+                lineColor: '#ea580c',
+                barColor: '#ea580c',
+                pointColor: '#ea580c',
+                yDomainMin: 0,
+                defaultCorrelationVariable: 'reason',
+            },
+            {
+                slug: 'education',
+                apiBase: '/education',
+                rootSelector: '#education-explorer',
+                shortLabel: 'education',
+                valueLabel: 'Education percentage',
+                valueUnit: 'percent',
+                colorInterpolator: d3.interpolateYlGnBu,
+                gradient: 'linear-gradient(90deg, #f7fee7 0%, #bae6fd 42%, #38bdf8 70%, #1d4ed8 100%)',
+                lineColor: '#0f766e',
+                barColor: '#0f766e',
+                pointColor: '#0f766e',
+                yDomainMin: 0,
+                defaultCorrelationVariable: 'metric',
+            },
+        ];
+    </script>
+    {% set asset_version = '20260608-std-trend-1' %}
+    <script src="{{ url_for('static', filename='js/map.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/microstate_callouts.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/legend.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/country_codes.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/eurostat_explorer.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/gdp_map.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/controls.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/standardization_controls.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/summary_analysis.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/bmi_explorer.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/country_indicator_explorer.js', v=asset_version) }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard_switchers.js', v=asset_version) }}"></script>
 </body>
 </html>

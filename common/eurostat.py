@@ -52,17 +52,18 @@ class EurostatCsvDataset:
     ) -> list[dict]:
         included = set(include_dimensions) if include_dimensions is not None else {dimension.key for dimension in self.dimensions}
         filtered = []
+        selected_years = _selected_values(filters.get("year"))
 
         for record in self.records():
-            if include_year and filters.get("year") and record.get("year") != filters["year"]:
+            if include_year and selected_years and record.get("year") not in selected_years:
                 continue
 
             matches = True
             for dimension in self.dimensions:
                 if dimension.key not in included:
                     continue
-                selected = filters.get(dimension.key)
-                if selected and record.get(dimension.record_code_key) != selected:
+                selected_values = _selected_values(filters.get(dimension.key))
+                if selected_values and record.get(dimension.record_code_key) not in selected_values:
                     matches = False
                     break
 
@@ -118,3 +119,10 @@ def option_list(records: Iterable[dict], code_key: str, label_key: str) -> list[
             seen[code] = label
 
     return [{"value": code, "label": label} for code, label in sorted(seen.items(), key=lambda item: item[1])]
+
+
+def _selected_values(value: str | None) -> set[str]:
+    if not value:
+        return set()
+
+    return {item.strip() for item in str(value).split(",") if item.strip()}
