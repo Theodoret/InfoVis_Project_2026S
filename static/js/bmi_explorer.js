@@ -22,7 +22,7 @@ const bmiViewConfigs = {
     chartSelector: '#bmi-correlation-scatter',
     summarySelector: '[data-bmi-summary="correlation"]',
     dataUrl: `${getSectorApiBase()}/bmi-gdp-correlation`,
-    filters: ['bmi', 'sex', 'age', 'education', 'year', 'gdpMetric', 'gdpScale', 'correlationVariable'],
+    filters: ['bmi', 'sex', 'age', 'education', 'year', 'gdpMetric', 'gdpYear', 'gdpScale', 'correlationVariable'],
   },
 };
 
@@ -331,12 +331,10 @@ function setCorrelationSummary(payload) {
   const selected = payload.selectedCorrelation || {};
   const titleNode = summary.querySelector('[data-bmi-summary-title]');
   const pearsonNode = summary.querySelector('[data-correlation-pearson]');
-  const spearmanNode = summary.querySelector('[data-correlation-spearman]');
   const countNode = summary.querySelector('[data-correlation-count]');
 
   if (titleNode) titleNode.textContent = payload.selectedLabel || '—';
   if (pearsonNode) pearsonNode.textContent = formatCorrelation(selected.pearson);
-  if (spearmanNode) spearmanNode.textContent = formatCorrelation(selected.spearman);
   if (countNode) countNode.textContent = Number.isFinite(selected.count) ? d3.format(',')(selected.count) : '—';
 }
 

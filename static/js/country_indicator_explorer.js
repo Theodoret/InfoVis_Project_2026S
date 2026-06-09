@@ -104,12 +104,10 @@ function setIndicatorCorrelationSummary(config, root, payload) {
   const selected = payload.selectedCorrelation || {};
   const titleNode = summary.querySelector('[data-indicator-summary-title]');
   const pearsonNode = summary.querySelector('[data-correlation-pearson]');
-  const spearmanNode = summary.querySelector('[data-correlation-spearman]');
   const countNode = summary.querySelector('[data-correlation-count]');
 
   if (titleNode) titleNode.textContent = payload.selectedLabel || '—';
   if (pearsonNode) pearsonNode.textContent = formatIndicatorCorrelation(selected.pearson);
-  if (spearmanNode) spearmanNode.textContent = formatIndicatorCorrelation(selected.spearman);
   if (countNode) countNode.textContent = Number.isFinite(selected.count) ? d3.format(',')(selected.count) : '—';
 }
 

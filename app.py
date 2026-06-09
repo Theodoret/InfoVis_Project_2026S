@@ -1,8 +1,8 @@
 from flask import Flask, jsonify, render_template, request
 
 from common.database import init_db
-from common.summary_analysis import summary_data_payload, summary_options_payload
-from Sectors.Activities import activities_bp
+from common.summary_analysis import summary_data_payload, summary_options_payload, summary_radar_payload
+from Sectors.Activities import ACTIVITIES_INDICATORS, activities_bp
 from Sectors.Education import EDUCATION_INDICATORS, education_bp
 from Sectors.Healthcare import HEALTHCARE_INDICATORS, healthcare_bp
 
@@ -28,9 +28,52 @@ SUMMARY_ANALYSIS_DATASETS = {
     },
     "education:education": {
         "sector": "Education",
-        "label": "Education indicators",
+        "label": "Education expenditure",
         "indicators": EDUCATION_INDICATORS,
         "indicator_key": "education",
+        "fixed_filters": {"metric": "expenditure"},
+    },
+    "education:completion_primary": {
+        "sector": "Education",
+        "label": "Completion rate: primary education",
+        "indicators": EDUCATION_INDICATORS,
+        "indicator_key": "education",
+        "fixed_filters": {"metric": "completion_primary"},
+    },
+    "education:completion_lower_secondary": {
+        "sector": "Education",
+        "label": "Completion rate: lower secondary education",
+        "indicators": EDUCATION_INDICATORS,
+        "indicator_key": "education",
+        "fixed_filters": {"metric": "completion_lower_secondary"},
+    },
+    "education:completion_upper_secondary": {
+        "sector": "Education",
+        "label": "Completion rate: upper secondary education",
+        "indicators": EDUCATION_INDICATORS,
+        "indicator_key": "education",
+        "fixed_filters": {"metric": "completion_upper_secondary"},
+    },
+    "activities:activities": {
+        "sector": "Activities",
+        "label": "Working Hours",
+        "indicators": ACTIVITIES_INDICATORS,
+        "indicator_key": "activities",
+        "fixed_filters": {"metric": "working_hours"},
+    },
+    "activities:tv_time": {
+        "sector": "Activities",
+        "label": "TV Time",
+        "indicators": ACTIVITIES_INDICATORS,
+        "indicator_key": "activities",
+        "fixed_filters": {"metric": "tv_time"},
+    },
+    "activities:social_meetings": {
+        "sector": "Activities",
+        "label": "Social Meetings",
+        "indicators": ACTIVITIES_INDICATORS,
+        "indicator_key": "activities",
+        "fixed_filters": {"metric": "social_meetings"},
     },
 }
 
@@ -53,6 +96,10 @@ def create_app() -> Flask:
     @app.route("/summary-analysis/data")
     def summary_analysis_data():
         return jsonify(summary_data_payload(SUMMARY_ANALYSIS_DATASETS, request.args))
+
+    @app.route("/summary-analysis/radar", methods=["POST"])
+    def summary_analysis_radar():
+        return jsonify(summary_radar_payload(SUMMARY_ANALYSIS_DATASETS, request.get_json(silent=True)))
 
     init_db()
     return app

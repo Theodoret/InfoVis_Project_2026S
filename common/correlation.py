@@ -36,42 +36,6 @@ def pearson_correlation(points: Iterable[tuple[float, float]]) -> float | None:
     return numerator / denominator
 
 
-def ranked_values(values: list[float]) -> list[float]:
-    """Return ranks using average ranks for ties.
-
-    Example: values [10, 20, 20] become ranks [1, 2.5, 2.5].
-    """
-    sorted_values = sorted((value, index) for index, value in enumerate(values))
-    ranks = [0.0] * len(values)
-    position = 0
-
-    while position < len(sorted_values):
-        tie_start = position
-        tie_value = sorted_values[position][0]
-
-        while position < len(sorted_values) and sorted_values[position][0] == tie_value:
-            position += 1
-
-        tie_end = position
-        average_rank = (tie_start + 1 + tie_end) / 2
-
-        for _, original_index in sorted_values[tie_start:tie_end]:
-            ranks[original_index] = average_rank
-
-    return ranks
-
-
-def spearman_correlation(points: Iterable[tuple[float, float]]) -> float | None:
-    """Measure whether larger x values usually come with larger y values."""
-    pairs = list(points)
-    if len(pairs) < 2:
-        return None
-
-    x_ranks = ranked_values([pair[0] for pair in pairs])
-    y_ranks = ranked_values([pair[1] for pair in pairs])
-    return pearson_correlation(zip(x_ranks, y_ranks))
-
-
 def linear_regression(points: Iterable[tuple[float, float]]) -> dict | None:
     """Build a simple trend line for the scatter plot."""
     pairs = list(points)
@@ -167,20 +131,13 @@ def build_gdp_correlation_payload(
     for variable, points in grouped_points.items():
         pairs = [(point["gdp"], point["value"]) for point in points]
         pearson = pearson_correlation(pairs)
-        spearman = spearman_correlation(pairs)
-        available_correlations = [
-            value
-            for value in (pearson, spearman)
-            if value is not None
-        ]
-        strength = max(abs(value) for value in available_correlations) if available_correlations else None
+        strength = abs(pearson) if pearson is not None else None
 
         correlations.append(
             {
                 "variable": variable,
                 "label": variable_labels.get(variable, variable),
                 "pearson": pearson,
-                "spearman": spearman,
                 "count": len(points),
                 "strength": strength,
             }

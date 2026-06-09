@@ -666,7 +666,7 @@ function renderCorrelationTable(options = {}) {
   const sortState = table && table.__correlationSort ? table.__correlationSort : null;
   const displayRows = [...rows];
 
-  if (sortState && ['pearson', 'spearman'].includes(sortState.column)) {
+  if (sortState && sortState.column === 'pearson') {
     const direction = sortState.direction === 'asc' ? 1 : -1;
     displayRows.sort((left, right) => {
       const leftValue = Number.isFinite(left[sortState.column]) ? left[sortState.column] : null;
@@ -685,7 +685,7 @@ function renderCorrelationTable(options = {}) {
       const column = label.toLowerCase();
       header.dataset.label = label;
 
-      if (!['pearson', 'spearman'].includes(column)) {
+      if (column !== 'pearson') {
         header.classList.remove('is-sortable', 'is-active-sort');
         header.removeAttribute('aria-sort');
         header.textContent = label;
@@ -739,7 +739,6 @@ function renderCorrelationTable(options = {}) {
       }
     });
   tableRows.append('td').text(row => coefficientFormatter(row.pearson));
-  tableRows.append('td').text(row => coefficientFormatter(row.spearman));
   tableRows.append('td').text(row => row.count);
 }
 

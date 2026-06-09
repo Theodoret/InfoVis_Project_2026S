@@ -19,6 +19,10 @@ class WorldBankWideCsvDataset:
         self.country_code_column = country_code_column
         self.value_key = value_key
 
+    def years(self) -> list[str]:
+        header, _ = _read_wide_csv(str(self.path), self.country_name_column)
+        return sorted((value for value in header if value.isdigit()), key=int)
+
     def records_for_year(self, year: str) -> tuple[str, list[dict]]:
         requested_year = str(year).strip()
         header, rows = _read_wide_csv(str(self.path), self.country_name_column)

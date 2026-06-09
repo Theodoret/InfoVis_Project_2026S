@@ -52,6 +52,13 @@ class CountryIndicatorSource:
     path: Path
 
 
+@dataclass(frozen=True)
+class WideCountryIndicatorMetric:
+    key: str
+    label: str
+    column: str
+
+
 class CountryIndicatorCsvDataset:
     """Read simple country/year/value CSVs as dashboard indicator records."""
 
@@ -122,6 +129,76 @@ class CountryIndicatorCsvDataset:
         return filtered
 
 
+class CountryIndicatorWideCsvDataset:
+    """Read one wide country/year CSV with several numeric metric columns."""
+
+    dimensions = (
+        EurostatDimension("metric", "metric", "Metric", "metric", "metricLabel"),
+        EurostatDimension("country", "countryCode", "Country", "countryCode", "country"),
+    )
+
+    def __init__(
+        self,
+        path: Path,
+        metrics: Iterable[WideCountryIndicatorMetric],
+        *,
+        country_code_column: str = "Country Code",
+        country_name_column: str = "Country Name",
+        year_column: str = "year",
+        country_names: dict[str, str] | None = None,
+    ) -> None:
+        self.path = path
+        self.metrics = tuple(metrics)
+        self.country_code_column = country_code_column
+        self.country_name_column = country_name_column
+        self.year_column = year_column
+        self.country_names = country_names or {}
+
+    def records(self) -> list[dict]:
+        return _read_wide_country_indicator_records(
+            str(self.path),
+            tuple((metric.key, metric.label, metric.column) for metric in self.metrics),
+            self.country_code_column,
+            self.country_name_column,
+            self.year_column,
+            tuple(sorted(self.country_names.items())),
+        )
+
+    def options(self) -> dict[str, list[dict]]:
+        records = self.records()
+        years = sorted({record["year"] for record in records if record.get("year")})
+        return {
+            "metric": [{"value": metric.key, "label": metric.label} for metric in self.metrics],
+            "country": option_list(records, "countryCode", "country"),
+            "year": [{"value": year, "label": year} for year in years],
+        }
+
+    def filtered_records(
+        self,
+        filters: dict[str, str],
+        *,
+        include_year: bool = True,
+        include_dimensions: Iterable[str] | None = None,
+    ) -> list[dict]:
+        included = set(include_dimensions) if include_dimensions is not None else {"metric", "country"}
+        selected_years = _selected_values(filters.get("year"))
+        selected_metrics = _selected_values(filters.get("metric"))
+        selected_countries = _selected_values(filters.get("country"))
+        filtered = []
+
+        for record in self.records():
+            if include_year and selected_years and record.get("year") not in selected_years:
+                continue
+            if "metric" in included and selected_metrics and record.get("metric") not in selected_metrics:
+                continue
+            if "country" in included and selected_countries and record.get("countryCode") not in selected_countries:
+                continue
+
+            filtered.append(record)
+
+        return filtered
+
+
 def prepare_indicator_registry(indicators: dict[str, dict]) -> dict[str, dict]:
     for indicator in indicators.values():
         indicator["correlation_variables"] = _correlation_variables(indicator["dimensions"])
@@ -135,6 +212,7 @@ def indicator_filters_from_args(indicators: dict[str, dict], indicator_key: str,
         key: args.get(key, value)
         for key, value in indicator["defaults"].items()
     }
+    filters["gdpYear"] = args.get("gdpYear") or latest_selected_year(filters.get("year")) or DEFAULT_GDP_YEAR
     filters["standardize"] = args.get("standardize", STANDARDIZE_OFF)
     filters["direction"] = args.get("direction", indicator.get("default_direction", POSITIVE_DIRECTION))
     filters["directions"] = args.get("directions", "{}")
@@ -153,6 +231,7 @@ def indicator_options_payload(indicators: dict[str, dict], indicator_key: str) -
         {"value": key, "label": value["label"]}
         for key, value in GDP_METRICS.items()
     ]
+    options["gdpYear"] = gdp_year_options()
     options["correlationVariable"] = [
         {"value": key, "label": value["label"]}
         for key, value in indicator["correlation_variables"].items()
@@ -169,8 +248,14 @@ def indicator_options_payload(indicators: dict[str, dict], indicator_key: str) -
         {"value": STANDARDIZE_OFF, "label": "Single selection"},
         {"value": STANDARDIZE_ON, "label": "Combined score"},
     ]
+    defaults = {
+        **indicator["defaults"],
+        "gdpYear": indicator["defaults"].get("gdpYear")
+        or latest_selected_year(indicator["defaults"].get("year"))
+        or DEFAULT_GDP_YEAR,
+    }
     return {
-        "defaults": indicator["defaults"],
+        "defaults": defaults,
         "options": options,
         "valueLabel": indicator["value_label"],
         "valueUnit": indicator["value_unit"],
@@ -187,6 +272,8 @@ def indicator_data_payload(indicators: dict[str, dict], indicator_key: str, args
         include_year=query["include_year"],
         include_dimensions=query["include_dimensions"],
     )
+    if chart_type in {"bar", "map"}:
+        records = country_records(records)
     records, standardization = apply_standardization(
         records,
         indicator["dimensions"],
@@ -211,11 +298,20 @@ def indicator_correlation_payload(indicators: dict[str, dict], indicator_key: st
     )
     selected_metric = filters.get(variable_config["variable_key"])
     query = indicator["view_queries"]["correlation"]
+    include_dimensions = variable_config["include_dimensions"]
+    if _truthy(filters.get("standardize")) and _truthy(filters.get("combine")):
+        include_dimensions = tuple(
+            dimension.key
+            for dimension in indicator["dimensions"]
+            if dimension.key != "country"
+        )
+
     indicator_records = indicator["dataset"].filtered_records(
         filters,
         include_year=query["include_year"],
-        include_dimensions=variable_config["include_dimensions"],
+        include_dimensions=include_dimensions,
     )
+    indicator_records = country_records(indicator_records)
     indicator_records, standardization = apply_standardization(
         indicator_records,
         indicator["dimensions"],
@@ -238,8 +334,8 @@ def indicator_correlation_payload(indicators: dict[str, dict], indicator_key: st
         variable_label_key = "_combinedVariableLabel"
         selected_metric = COMBINED_SCORE_KEY
 
-    gdp_year = _first_selected_value(filters.get("year")) or filters["year"]
-    resolved_gdp_year, gdp_records = metric["dataset"].records_for_year(gdp_year)
+    gdp_year = filters.get("gdpYear") or latest_selected_year(filters.get("year")) or filters["year"]
+    resolved_gdp_year, gdp_records = gdp_records_for_years(metric, gdp_year)
     payload = build_gdp_correlation_payload(
         gdp_records=gdp_records,
         indicator_records=indicator_records,
@@ -280,6 +376,70 @@ def gdp_data_payload(args) -> dict:
         "gdpMetricShortLabel": metric["short_label"],
         "gdpMetricUnit": metric["unit"],
     }
+
+
+def gdp_year_options() -> list[dict[str, str]]:
+    years = sorted(
+        {
+            year
+            for metric in GDP_METRICS.values()
+            for year in metric["dataset"].years()
+        },
+        key=int,
+    )
+    return [{"value": year, "label": year} for year in years]
+
+
+def gdp_records_for_years(metric: dict, years_value: str | None) -> tuple[str, list[dict]]:
+    """Return GDP rows for one year, or per-country mean GDP across selected years."""
+    dataset = metric["dataset"]
+    selected_years = _selected_value_list(years_value)
+    if not selected_years:
+        selected_years = [DEFAULT_GDP_YEAR]
+
+    if len(selected_years) == 1:
+        return dataset.records_for_year(selected_years[0])
+
+    grouped: dict[str, dict] = {}
+    resolved_years = []
+    seen_years = set()
+    for year in selected_years:
+        resolved_year, records = dataset.records_for_year(year)
+        if resolved_year and resolved_year not in seen_years:
+            resolved_years.append(resolved_year)
+            seen_years.add(resolved_year)
+
+        for record in records:
+            country_code = record.get("countryCode")
+            value = record.get("gdp")
+            if not country_code or not isinstance(value, (int, float)):
+                continue
+
+            entry = grouped.setdefault(
+                country_code,
+                {
+                    "country": record.get("country", country_code),
+                    "countryCode": country_code,
+                    "values": [],
+                },
+            )
+            entry["values"].append(value)
+
+    records = []
+    for entry in grouped.values():
+        values = entry["values"]
+        if not values:
+            continue
+        records.append(
+            {
+                "country": entry["country"],
+                "countryCode": entry["countryCode"],
+                "gdp": sum(values) / len(values),
+            }
+        )
+
+    label = ", ".join(resolved_years or selected_years)
+    return label, records
 
 
 @lru_cache(maxsize=4)
@@ -488,11 +648,42 @@ def _selected_values(value: str | None) -> set[str]:
     return {item.strip() for item in str(value).split(",") if item.strip()}
 
 
-def _first_selected_value(value: str | None) -> str:
+def _selected_value_list(value: str | None) -> list[str]:
     if not value:
-        return ""
+        return []
 
-    return next((item.strip() for item in str(value).split(",") if item.strip()), "")
+    seen = set()
+    selected = []
+    for item in str(value).split(","):
+        item = item.strip()
+        if item and item not in seen:
+            selected.append(item)
+            seen.add(item)
+    return selected
+
+
+def latest_selected_year(value: str | None) -> str:
+    years = []
+    for item in str(value or "").split(","):
+        item = item.strip()
+        if item.isdigit():
+            years.append(int(item))
+    return str(max(years)) if years else ""
+
+
+def country_records(records: Iterable[dict]) -> list[dict]:
+    return [record for record in records if is_country_record(record)]
+
+
+def is_country_record(record: dict) -> bool:
+    code = str(record.get("countryCode", "")).upper()
+    return bool(code) and not (
+        code.startswith("EU")
+        or code.startswith("EA")
+        or code.startswith("EEA")
+        or code.startswith("EFTA")
+        or code == "DE_TOT"
+    )
 
 
 def _truthy(value: str | None) -> bool:
@@ -535,6 +726,55 @@ def _read_country_indicator_records(
                         "countryCode": country_code,
                         "iso3": country_code,
                         "country": country_names.get(country_code, country_code),
+                        "year": year,
+                        "value": value,
+                    }
+                )
+
+    return records
+
+
+@lru_cache(maxsize=8)
+def _read_wide_country_indicator_records(
+    path: str,
+    metrics: tuple[tuple[str, str, str], ...],
+    country_code_column: str,
+    country_name_column: str,
+    year_column: str,
+    country_names_items: tuple[tuple[str, str], ...],
+) -> list[dict]:
+    csv_path = Path(path)
+    if not csv_path.exists():
+        return []
+
+    country_names = dict(country_names_items)
+    records = []
+
+    with csv_path.open("r", encoding="utf-8-sig", newline="") as csv_file:
+        for row in csv.DictReader(csv_file):
+            country_code = row.get(country_code_column, "").strip()
+            year = row.get(year_column, "").strip()
+            if not country_code or not year:
+                continue
+
+            country = row.get(country_name_column, "").strip() or country_names.get(country_code, country_code)
+            for metric_key, metric_label, column in metrics:
+                raw_value = row.get(column, "")
+                if raw_value is None or str(raw_value).strip() == "":
+                    continue
+
+                try:
+                    value = float(raw_value)
+                except ValueError:
+                    continue
+
+                records.append(
+                    {
+                        "metric": metric_key,
+                        "metricLabel": metric_label,
+                        "countryCode": country_code,
+                        "iso3": country_code,
+                        "country": country,
                         "year": year,
                         "value": value,
                     }

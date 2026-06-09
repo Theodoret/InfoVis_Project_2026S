@@ -47,9 +47,10 @@ function initializeHealthcareSwitcher() {
   showSelectedPanel(selects[0].value, false);
 }
 
-function initializeEducationMetricSwitcher() {
-  const select = document.querySelector('#education-data-select');
-  const root = document.querySelector('#education-explorer');
+function initializeMetricSwitcher(options = {}) {
+  const select = document.querySelector(options.selectSelector);
+  const root = document.querySelector(options.rootSelector);
+  const explorerKey = options.explorerKey;
 
   if (!select || !root) {
     return;
@@ -98,7 +99,7 @@ function initializeEducationMetricSwitcher() {
 
   function syncMetric() {
     syncHiddenMetricControls();
-    refreshExplorer(window.indicatorExplorers && window.indicatorExplorers.education);
+    refreshExplorer(window.indicatorExplorers && window.indicatorExplorers[explorerKey]);
   }
 
   select.addEventListener('change', syncMetric);
@@ -118,7 +119,16 @@ function initializeEducationMetricSwitcher() {
 
 function initializeDashboardSwitchers() {
   initializeHealthcareSwitcher();
-  initializeEducationMetricSwitcher();
+  initializeMetricSwitcher({
+    selectSelector: '#education-data-select',
+    rootSelector: '#education-explorer',
+    explorerKey: 'education',
+  });
+  initializeMetricSwitcher({
+    selectSelector: '#activities-data-select',
+    rootSelector: '#activities-explorer',
+    explorerKey: 'activities',
+  });
 }
 
 if (document.readyState === 'loading') {

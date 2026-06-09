@@ -35,6 +35,8 @@ y = selected indicator value
 
 If the user chooses `log(GDP)`, the project uses the natural logarithm of GDP as `x`. GDP values less than or equal to zero are skipped because they cannot be logged.
 
+When several GDP years are selected, the backend first calculates the mean GDP value per country across those selected years. That mean value becomes `x`. If `log(value)` is selected, the logarithm is applied after the multi-year mean is calculated.
+
 ### Pearson correlation
 
 Pearson correlation measures how strongly the two variables follow a straight-line relationship. The project calculates it by:
@@ -52,33 +54,15 @@ r = sum((x - mean_x) * (y - mean_y))
 
 If there are fewer than two countries, or if all GDP or indicator values are the same, Pearson correlation is not calculated.
 
-### Spearman correlation
-
-Spearman correlation measures whether higher GDP values generally come with higher or lower indicator values, without requiring a straight-line relationship.
-
-The project calculates Spearman by:
-
-1. Converting GDP values into ranks.
-2. Converting indicator values into ranks.
-3. Giving tied values their average rank.
-4. Running the same Pearson formula on those ranks.
-
-Example:
-
-```text
-values: 10, 20, 20
-ranks:   1,  2.5, 2.5
-```
-
 ### Reading the results
 
-Both Pearson and Spearman values range from `-1` to `1`.
+Pearson values range from `-1` to `1`.
 
 - `1` means a strong positive relationship.
 - `-1` means a strong negative relationship.
 - `0` means little or no relationship.
 
-The correlation table is sorted from strongest to weakest relationship using the largest absolute value from Pearson or Spearman for each variable.
+The correlation table is sorted from strongest to weakest relationship using the absolute Pearson value for each variable.
 
 ## Standardized 0-1 Scores
 
@@ -124,23 +108,24 @@ When standardized values are enabled, combined scores are used automatically. Th
 combined_country_score = mean(selected standardized scores for that country)
 ```
 
-So if the user selects several ages, sexes, years, or indicator categories, every available normalized value contributes equally to the final country score. The `Values combined` column in Summary Analysis shows how many normalized values went into that country's score.
+So if the user selects several ages, sexes, years, or indicator categories, every available normalized value contributes equally to the final country score.
 
 The standardization controls are saved in browser `localStorage`, so the selected raw/standardized mode and per-option directions survive page reloads.
 
 ## Summary Analysis
 
-The Summary Analysis section is a cross-sector view for comparing whole datasets with GDP. It currently uses the registered datasets from Healthcare and Education. Activities can be added as soon as activity datasets are registered in the same modular format.
+The Summary Analysis section is a cross-sector view for comparing indicators with GDP. It uses the registered indicators from Healthcare, Education, and Activities.
 
 The Summary workflow is:
 
-1. Choose a dataset, such as BMI, life expectancy, unmet medical needs, or education indicators.
-2. The page builds checkbox dropdown filters from that dataset's columns.
+1. Choose an indicator, such as BMI, life expectancy, education expenditure, TV time, or social meetings.
+2. The page builds checkbox dropdown filters from that indicator's columns.
 3. By default, every value in every filter is selected.
 4. Each selected value can be marked as `Positive` or `Negative`.
 5. The backend calculates normalized 0-1 scores for every selected slice.
 6. The backend combines all selected standardized slices into one mean score per country.
 7. The page compares that country score with the selected GDP metric.
+8. The radar chart repeats this calculation for every registered Summary indicator and shows the absolute Pearson score.
 
 Summary Analysis always interprets the final score as:
 
@@ -149,26 +134,28 @@ Summary Analysis always interprets the final score as:
 1 = better
 ```
 
-The Summary table contains:
+The Summary radar contains:
 
-- `Country`: the country included in the selected dataset.
-- `Standardized score`: the combined 0-1 country score.
-- `GDP`: the selected GDP value used for the correlation, or blank when GDP is unavailable.
-- `Values combined`: the number of standardized values averaged for that country.
+- one axis per Healthcare indicator: BMI, life expectancy, and unmet medical needs.
+- one axis per Education indicator, such as expenditure or completion rate.
+- one axis per Activities indicator, such as working hours, TV time, or social meetings.
+- a value from `0` to `1`, calculated as `abs(Pearson correlation)`.
 
-Summary filter selections are saved per dataset in browser `localStorage`. For example, BMI can remember one set of selected BMI/sex/age/year values, while Education remembers a different set of selected metric/year values. The selected Summary dataset, GDP metric, and GDP scale are saved too.
+The radar is visually grouped into Healthcare, Education, and Activities sectors. A negative Pearson value is shown as a positive strength value on the radar. For example, `-0.68` becomes `0.68`.
 
-### Summary Pearson and Spearman
+Summary filter selections are saved per indicator in browser `localStorage`. For example, BMI can remember one set of selected BMI/sex/age/year values, while TV Time remembers a different year selection. GDP Year is also saved per indicator, while GDP metric and GDP scale remain shared Summary controls.
 
-Summary Analysis calculates Pearson and Spearman correlations using one point per country:
+### Summary Pearson
+
+Summary Analysis calculates Pearson correlation using one point per country:
 
 ```text
 x = selected GDP or GDP per capita value
 y = combined standardized country score
 ```
 
-If `log(value)` is selected for GDP scale, the project uses the natural logarithm of the GDP value as `x`. Countries with missing GDP, invalid GDP, or non-positive GDP in log mode are excluded from the correlation calculation. They can still appear in the score table if the indicator score exists.
+If `log(value)` is selected for GDP scale, the project uses the natural logarithm of the GDP value as `x`. Countries with missing GDP, invalid GDP, or non-positive GDP in log mode are excluded from the correlation calculation.
 
-For Summary Analysis, the GDP year is resolved from the selected years. If multiple years are selected, the backend uses the latest selected year for GDP, while the standardized country score can combine values from all selected years.
+For Summary Analysis, the GDP year selector supports multiple values and is saved separately for each indicator. If multiple GDP years are selected for an indicator, the backend calculates each country's mean GDP across those selected years, then compares that value with the combined standardized score.
 
-Pearson measures the straight-line relationship between GDP and the combined score. Spearman measures whether higher GDP countries tend to rank higher or lower by the combined score. Both values range from `-1` to `1`.
+Pearson measures the straight-line relationship between GDP and the combined score. Its value ranges from `-1` to `1`.

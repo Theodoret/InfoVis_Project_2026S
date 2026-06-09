@@ -50,6 +50,53 @@ function createEurostatExplorer(config = {}) {
     return control ? control.value : '';
   }
 
+  function selectedValues(control) {
+    if (!control) {
+      return [];
+    }
+
+    if (control.multiple) {
+      return Array.from(control.selectedOptions || [])
+        .map(option => option.value)
+        .filter(Boolean);
+    }
+
+    return control.value ? [control.value] : [];
+  }
+
+  function setControlValues(control, values, multiple) {
+    const selected = new Set(values.filter(Boolean));
+    control.multiple = Boolean(multiple);
+
+    Array.from(control.options || []).forEach(option => {
+      option.selected = selected.has(option.value);
+    });
+
+    if (!multiple) {
+      control.value = values[0] || control.value;
+    }
+  }
+
+  function syncMatchingFilters(source) {
+    const key = datasetValue(source, config.filterDatasetKey);
+    if (!root || !key) {
+      return;
+    }
+
+    const values = selectedValues(source);
+    root.querySelectorAll(config.filterSelector).forEach(control => {
+      if (control === source || datasetValue(control, config.filterDatasetKey) !== key) {
+        return;
+      }
+
+      setControlValues(control, values, source.multiple);
+    });
+
+    if (typeof window.refreshStandardizationControls === 'function') {
+      window.refreshStandardizationControls(root);
+    }
+  }
+
   function activeValueFormatter() {
     return state.valueFormatter || config.valueFormatter;
   }
@@ -70,6 +117,7 @@ function createEurostatExplorer(config = {}) {
 
   function addChangeListener(control, getView) {
     control.addEventListener('change', () => {
+      syncMatchingFilters(control);
       const view = getView();
       loadData(view).catch(error => {
         console.error('Failed to update Eurostat explorer', error);

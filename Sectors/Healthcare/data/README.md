@@ -61,6 +61,6 @@ payload = build_gdp_correlation_payload(
 
 The payload includes:
 
-- `correlations`: Pearson and Spearman table, sorted strongest to weakest.
+- `correlations`: Pearson table, sorted strongest to weakest.
 - `scatter.points`: country-level points for the selected variable.
 - `scatter.trend`: a simple linear trend line for the scatter plot.

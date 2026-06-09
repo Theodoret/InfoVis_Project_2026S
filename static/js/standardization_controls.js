@@ -5,6 +5,7 @@ const COMBINABLE_FILTER_EXCLUSIONS = new Set([
   'gdpScale',
   'correlationVariable',
 ]);
+const DIRECTIONLESS_FILTERS = new Set(['gdpYear']);
 const DIRECTION_VALUES = new Set(['positive', 'negative']);
 
 function formatStandardizedScore(value) {
@@ -61,6 +62,12 @@ function filterKeyForSelect(select) {
   if (select.id === 'education-data-select') {
     return 'metric';
   }
+  if (select.id === 'activities-data-select') {
+    return 'metric';
+  }
+  if (select.id === 'summary-gdp-year-select') {
+    return 'gdpYear';
+  }
   return select.dataset.bmiFilter || select.dataset.indicatorFilter || '';
 }
 
@@ -93,10 +100,13 @@ function defaultDirectionForOption(toolbar, filterKey, optionValue) {
   const rootKey = toolbar.dataset.standardizationRoot || '';
   const summaryDataset = toolbar.dataset.summaryDataset || '';
   if ((rootKey === 'bmi' || summaryDataset === 'healthcare:bmi') && filterKey === 'bmi') {
-    return ['BMI_GE30', 'BMI25-29', 'BMI_LT18P5'].includes(optionValue) ? 'negative' : 'positive';
+    return ['BMI_GE30', 'BMI_GE25', 'BMI25-29', 'BMI_LT18P5'].includes(optionValue) ? 'negative' : 'positive';
   }
   if ((rootKey === 'unmet' || summaryDataset === 'healthcare:unmet') && filterKey === 'reason') {
     return 'negative';
+  }
+  if ((rootKey === 'activities' || summaryDataset === 'activities:activities') && filterKey === 'metric') {
+    return ['working_hours', 'tv_time'].includes(optionValue) ? 'negative' : 'positive';
   }
   return 'positive';
 }
@@ -180,10 +190,21 @@ function findCombinableControls(toolbar) {
     .filter(select => !select.classList.contains('is-hidden'))
     .filter(select => !COMBINABLE_FILTER_EXCLUSIONS.has(select.dataset[datasetKey]));
 
-  if (section.id === 'education-explorer') {
-    const educationMetricSelect = document.getElementById('education-data-select');
-    if (educationMetricSelect) {
-      controls.push(educationMetricSelect);
+  const topLevelMetricSelect = {
+    'education-explorer': 'education-data-select',
+    'activities-explorer': 'activities-data-select',
+  }[section.id];
+  if (topLevelMetricSelect) {
+    const metricSelect = document.getElementById(topLevelMetricSelect);
+    if (metricSelect) {
+      controls.push(metricSelect);
+    }
+  }
+
+  if (section.id === 'summary-analysis') {
+    const gdpYearSelect = section.querySelector('#summary-gdp-year-select');
+    if (gdpYearSelect) {
+      controls.push(gdpYearSelect);
     }
   }
 
@@ -257,6 +278,7 @@ function renderCheckboxDropdown(toolbar, select, allowMultiple) {
   if (!filterKey || !select.options.length) {
     return;
   }
+  const showDirection = !DIRECTIONLESS_FILTERS.has(filterKey);
 
   const selectedValues = selectedOptionValues(select);
   setSelectedOptionValues(select, selectedValues.length ? selectedValues : [select.value || select.options[0].value], allowMultiple);
@@ -289,6 +311,7 @@ function renderCheckboxDropdown(toolbar, select, allowMultiple) {
     const checkboxId = `${filterKey}-${option.value}-${index}`.replace(/[^a-zA-Z0-9_-]/g, '-');
     const item = document.createElement('div');
     item.className = 'checkbox-filter-item';
+    item.classList.toggle('is-directionless', !showDirection);
 
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
@@ -329,34 +352,35 @@ function renderCheckboxDropdown(toolbar, select, allowMultiple) {
       }
     });
 
-    const direction = document.createElement('select');
-    direction.className = 'checkbox-direction-select';
-    direction.innerHTML = '<option value="positive">Positive</option><option value="negative">Negative</option>';
-    direction.value = getOptionDirection(toolbar, filterKey, option.value);
-    let lastDirection = direction.value;
-    direction.addEventListener('click', event => event.stopPropagation());
-    direction.addEventListener('mousedown', event => event.stopPropagation());
-    const handleDirectionChange = event => {
-      if (event) {
-        event.stopPropagation();
-      }
-      if (direction.value === lastDirection) {
-        return;
-      }
-      lastDirection = direction.value;
-      setOptionDirection(toolbar, filterKey, option.value, direction.value);
-      dispatchDirectionChange(toolbar, {
-        filterKey,
-        optionValue: option.value,
-        direction: direction.value,
-      });
-    };
-    direction.addEventListener('input', handleDirectionChange);
-    direction.addEventListener('change', handleDirectionChange);
-
     item.appendChild(checkbox);
     item.appendChild(text);
-    item.appendChild(direction);
+    if (showDirection) {
+      const direction = document.createElement('select');
+      direction.className = 'checkbox-direction-select';
+      direction.innerHTML = '<option value="positive">Positive</option><option value="negative">Negative</option>';
+      direction.value = getOptionDirection(toolbar, filterKey, option.value);
+      let lastDirection = direction.value;
+      direction.addEventListener('click', event => event.stopPropagation());
+      direction.addEventListener('mousedown', event => event.stopPropagation());
+      const handleDirectionChange = event => {
+        if (event) {
+          event.stopPropagation();
+        }
+        if (direction.value === lastDirection) {
+          return;
+        }
+        lastDirection = direction.value;
+        setOptionDirection(toolbar, filterKey, option.value, direction.value);
+        dispatchDirectionChange(toolbar, {
+          filterKey,
+          optionValue: option.value,
+          direction: direction.value,
+        });
+      };
+      direction.addEventListener('input', handleDirectionChange);
+      direction.addEventListener('change', handleDirectionChange);
+      item.appendChild(direction);
+    }
     menu.appendChild(item);
   });
 
