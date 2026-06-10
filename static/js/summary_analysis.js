@@ -305,7 +305,7 @@ function initializeSummaryAnalysis() {
     ];
   }
 
-  function drawRadarEuropeBackground(svg, centerX, centerY, radius) {
+  function drawRadarEuropeBackground(svg, width, height) {
     const layer = svg.append('g').attr('class', 'summary-radar-europe-map');
     if (typeof window.loadEuropeMapFeatures !== 'function') {
       return;
@@ -317,14 +317,24 @@ function initializeSummaryAnalysis() {
           return;
         }
         const collection = { type: 'FeatureCollection', features };
-        const projection = d3.geoMercator().fitExtent(
-          [
-            [centerX - radius * 1.02, centerY - radius * 0.86],
-            [centerX + radius * 1.02, centerY + radius * 0.92],
-          ],
-          collection
-        );
-        const path = d3.geoPath().projection(projection);
+        const projection = d3.geoMercator().fitSize([width, height], collection);
+        let path = d3.geoPath().projection(projection);
+        const bounds = path.bounds(collection);
+        const mapWidth = Math.max(1, bounds[1][0] - bounds[0][0]);
+        const mapHeight = Math.max(1, bounds[1][1] - bounds[0][1]);
+        const coverScale = Math.max(width / mapWidth, height / mapHeight) * 1.08;
+        const translate = projection.translate();
+        const boundsCenter = [
+          (bounds[0][0] + bounds[1][0]) / 2,
+          (bounds[0][1] + bounds[1][1]) / 2,
+        ];
+        projection
+          .scale(projection.scale() * coverScale)
+          .translate([
+            width / 2 - coverScale * (boundsCenter[0] - translate[0]),
+            height / 2 - coverScale * (boundsCenter[1] - translate[1]),
+          ]);
+        path = d3.geoPath().projection(projection);
         layer.selectAll('path')
           .data(features)
           .join('path')
@@ -380,7 +390,7 @@ function initializeSummaryAnalysis() {
     fillGradient.append('stop').attr('offset', '58%').attr('stop-color', '#60a5fa').attr('stop-opacity', 0.34);
     fillGradient.append('stop').attr('offset', '100%').attr('stop-color', '#4f46e5').attr('stop-opacity', 0.24);
 
-    drawRadarEuropeBackground(svg, centerX, centerY, radius);
+    drawRadarEuropeBackground(svg, width, height);
 
     const background = svg.append('g').attr('class', 'summary-radar-background');
     let cursor = 0;

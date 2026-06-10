@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>InfoVis Project - European Indicators</title>
-    {% set asset_version = '20260609-summary-indicators-1' %}
+    {% set asset_version = '20260610-summary-bottom-radar-bg-1' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css', v=asset_version) }}" />
 </head>
 <body class="ivan-page sector-page">
@@ -20,10 +20,10 @@
 
             <nav class="nav-links" aria-label="Primary">
                 <a href="#map-card">GDP</a>
-                <a href="#summary-analysis">Summary</a>
                 <a href="#healthcare">Healthcare</a>
                 <a href="#education">Education</a>
                 <a href="#activities">Activities</a>
+                <a href="#summary-analysis">Summary</a>
             </nav>
 
             <div class="search-box" aria-label="Search">Explore countries and indicators...</div>
@@ -90,78 +90,6 @@
                     <span class="stat-label">Activities</span>
                     <strong>3</strong>
                     <span class="stat-meta">working hours, TV, social meetings</span>
-                </article>
-            </section>
-
-            <section class="bmi-section summary-section" id="summary-analysis">
-                <article class="panel bmi-panel">
-                    <div class="panel-head panel-head--stacked sector-panel-head">
-                        <div>
-                            <h2>Summary Analysis</h2>
-                            <p class="panel-description">Compare saved 0-1 indicator selections with GDP and scan absolute Pearson strength across every sector.</p>
-                        </div>
-                        <span class="panel-badge">Standardized score</span>
-                    </div>
-
-                    <div class="standardization-toolbar summary-toolbar" data-standardization-root="summary">
-                        <label>
-                            <span>Indicators</span>
-                            <select id="summary-dataset-select"></select>
-                        </label>
-                        <label>
-                            <span>GDP Metric</span>
-                            <select id="summary-gdp-metric-select"></select>
-                        </label>
-                        <label>
-                            <span>GDP Year</span>
-                            <select id="summary-gdp-year-select"></select>
-                        </label>
-                        <label>
-                            <span>GDP Scale</span>
-                            <select id="summary-gdp-scale-select"></select>
-                        </label>
-                        <label class="is-hidden">
-                            <span>Values</span>
-                            <select data-standardize-filter="standardize"><option value="1">0-1 score</option></select>
-                        </label>
-                    </div>
-
-                    <div class="bmi-controls summary-filter-controls" id="summary-filter-controls"></div>
-
-                    <div class="summary-analysis-grid">
-                        <aside class="bmi-summary summary-card">
-                            <div class="hover-label">Pearson</div>
-                            <div class="hover-country" data-summary-pearson>-</div>
-                            <p class="sidebar-note">Linear relationship between GDP and the combined standardized score.</p>
-                        </aside>
-                        <aside class="bmi-summary summary-card">
-                            <div class="hover-label">Countries</div>
-                            <div class="hover-country" data-summary-count>-</div>
-                            <p class="sidebar-note" data-summary-meta>Choose an indicator to calculate the score.</p>
-                        </aside>
-                    </div>
-
-                    <div class="summary-radar-shell">
-                        <div id="summary-radar-chart" class="summary-radar-chart"></div>
-                        <aside class="summary-radar-side">
-                            <div>
-                                <div class="hover-label">Radar Strength</div>
-                                <div class="summary-radar-score" data-radar-average>-</div>
-                                <p class="sidebar-note">Average absolute Pearson score across all available indicators.</p>
-                            </div>
-                            <div class="summary-radar-mini-grid">
-                                <div>
-                                    <span>Strongest</span>
-                                    <strong data-radar-strongest>-</strong>
-                                </div>
-                                <div>
-                                    <span>Axes</span>
-                                    <strong data-radar-count>-</strong>
-                                </div>
-                            </div>
-                            <div class="summary-radar-legend" id="summary-radar-legend"></div>
-                        </aside>
-                    </div>
                 </article>
             </section>
 
@@ -708,6 +636,78 @@
                             <div class="correlation-table-toolbar"><label><span>Variable</span><select id="activities-correlation-variable" data-indicator-filter="correlationVariable"></select></label></div>
                             <table class="correlation-table" id="activities-correlation-table"><thead><tr><th>Variable</th><th>Pearson</th><th>Countries</th></tr></thead><tbody></tbody></table>
                         </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="bmi-section summary-section" id="summary-analysis">
+                <article class="panel bmi-panel">
+                    <div class="panel-head panel-head--stacked sector-panel-head">
+                        <div>
+                            <h2>Summary Analysis</h2>
+                            <p class="panel-description">Compare saved 0-1 indicator selections with GDP and scan absolute Pearson strength across every sector.</p>
+                        </div>
+                        <span class="panel-badge">Standardized score</span>
+                    </div>
+
+                    <div class="standardization-toolbar summary-toolbar" data-standardization-root="summary">
+                        <label>
+                            <span>Indicators</span>
+                            <select id="summary-dataset-select"></select>
+                        </label>
+                        <label>
+                            <span>GDP Metric</span>
+                            <select id="summary-gdp-metric-select"></select>
+                        </label>
+                        <label>
+                            <span>GDP Year</span>
+                            <select id="summary-gdp-year-select"></select>
+                        </label>
+                        <label>
+                            <span>GDP Scale</span>
+                            <select id="summary-gdp-scale-select"></select>
+                        </label>
+                        <label class="is-hidden">
+                            <span>Values</span>
+                            <select data-standardize-filter="standardize"><option value="1">0-1 score</option></select>
+                        </label>
+                    </div>
+
+                    <div class="bmi-controls summary-filter-controls" id="summary-filter-controls"></div>
+
+                    <div class="summary-analysis-grid">
+                        <aside class="bmi-summary summary-card">
+                            <div class="hover-label">Pearson</div>
+                            <div class="hover-country" data-summary-pearson>-</div>
+                            <p class="sidebar-note">Linear relationship between GDP and the combined standardized score.</p>
+                        </aside>
+                        <aside class="bmi-summary summary-card">
+                            <div class="hover-label">Countries</div>
+                            <div class="hover-country" data-summary-count>-</div>
+                            <p class="sidebar-note" data-summary-meta>Choose an indicator to calculate the score.</p>
+                        </aside>
+                    </div>
+
+                    <div class="summary-radar-shell">
+                        <div id="summary-radar-chart" class="summary-radar-chart"></div>
+                        <aside class="summary-radar-side">
+                            <div>
+                                <div class="hover-label">Radar Strength</div>
+                                <div class="summary-radar-score" data-radar-average>-</div>
+                                <p class="sidebar-note">Average absolute Pearson score across all available indicators.</p>
+                            </div>
+                            <div class="summary-radar-mini-grid">
+                                <div>
+                                    <span>Strongest</span>
+                                    <strong data-radar-strongest>-</strong>
+                                </div>
+                                <div>
+                                    <span>Axes</span>
+                                    <strong data-radar-count>-</strong>
+                                </div>
+                            </div>
+                            <div class="summary-radar-legend" id="summary-radar-legend"></div>
+                        </aside>
                     </div>
                 </article>
             </section>

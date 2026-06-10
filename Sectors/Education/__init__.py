@@ -4,8 +4,8 @@ from flask import Blueprint, abort, jsonify, redirect, request, url_for
 
 from common.sector_indicators import (
     DEFAULT_GDP_METRIC,
-    CountryIndicatorCsvDataset,
-    CountryIndicatorSource,
+    CountryIndicatorWideCsvDataset,
+    WideCountryIndicatorMetric,
     gdp_data_payload,
     indicator_correlation_payload,
     indicator_data_payload,
@@ -22,12 +22,14 @@ education_bp = Blueprint(
 )
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
-EDUCATION_DATASET = CountryIndicatorCsvDataset(
+EDUCATION_CSV_PATH = DATA_DIR / "preprocessed_education.csv"
+EDUCATION_DATASET = CountryIndicatorWideCsvDataset(
+    EDUCATION_CSV_PATH,
     (
-        CountryIndicatorSource("expenditure", "Education expenditure", DATA_DIR / "expenditure.csv"),
-        CountryIndicatorSource("completion_primary", "Completion rate: primary education", DATA_DIR / "Completion_Rate_Primary_Ed.csv"),
-        CountryIndicatorSource("completion_lower_secondary", "Completion rate: lower secondary education", DATA_DIR / "Completion_Rate_Lower_Secondary_Ed.csv"),
-        CountryIndicatorSource("completion_upper_secondary", "Completion rate: upper secondary education", DATA_DIR / "Completion_Rate_Upper_Secondary_Ed.csv"),
+        WideCountryIndicatorMetric("expenditure", "Education expenditure", "Expenditure"),
+        WideCountryIndicatorMetric("completion_primary", "Completion rate: primary education", "Completion Rate: Primary Education"),
+        WideCountryIndicatorMetric("completion_lower_secondary", "Completion rate: lower secondary education", "Completion Rate: Lower Secondary Education"),
+        WideCountryIndicatorMetric("completion_upper_secondary", "Completion rate: upper secondary education", "Completion Rate: Upper Secondary Education"),
     ),
     country_names=world_bank_country_names(),
 )

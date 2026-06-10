@@ -1,5 +1,10 @@
-Paul's data folder.
+Education data folder.
 
-Place any CSV/JSON or other data files here that are specific to Paul's visualizations.
+The dashboard reads `preprocessed_education.csv` at runtime. That file contains all four education metrics in one country/year table:
 
-This folder is kept under version control (contains .gitkeep) so collaborators can add files.
+- `Expenditure`
+- `Completion Rate: Primary Education`
+- `Completion Rate: Lower Secondary Education`
+- `Completion Rate: Upper Secondary Education`
+
+The older individual CSV files are source/intermediate files and are not used by the Flask dashboard.
